@@ -89,7 +89,6 @@ void jfvm_arc_dec(JVM *jvm, Object *obj) {
 /** Decreases refcnt to object in slot (and destroys object if refcnt == zero) */
 void jfvm_arc_release(JVM *jvm, Slot *slot) {
   if (slot->obj == NULL) return;
-  if (slot->type != 'L') return;
   jfvm_arc_dec(jvm, slot->obj);
   //DO NOT CLEAR slot->obj (see if_acmpeq and if_acmpne)
   slot->type = 0;
