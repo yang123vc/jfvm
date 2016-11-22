@@ -1,0 +1,64 @@
+<project name="jfvm" default="help" basedir=".">
+  <description>native</description>
+  <property environment="env"/>
+
+  <target name="compile" description="compile the source">
+    <!-- Compile the java code from ${src} into ${build} -->
+    <mkdir dir="classes"/>
+    <javac srcdir="src" destdir="classes" target="1.8" source="1.8" debug="true">
+    </javac>
+  </target>
+
+  <target name="jar" depends="compile" description="build jar file">
+    <!-- Build jar file from class files -->
+    <jar destfile="../lib/jfvm.jar" includes="**/*.class" basedir="classes">
+    </jar>
+  </target>
+
+  <macrodef name="build">
+    <attribute name="bits"/>
+    <attribute name="name"/>
+    <attribute name="ext"/>
+    <attribute name="a"/>
+    <sequential>
+      <copy file="../lib/jfvm-@{name}@{bits}@{ext}@{a}" todir="."/>
+      <java jar="../bin/jfvmc.jar" fork="true">
+        <arg value="--@{bits}"/>
+        <arg value="-g"/>
+        <arg value="../lib/jfvm.jar"/>
+        <arg value="--out"/>
+        <arg value="../lib/classpath-@{name}@{bits}@{ext}"/>
+        <arg value="--natives"/>
+        <arg value="native/object.c"/>
+        <arg value="native/class.c"/>
+        <arg value="native/classloader.c"/>
+        <arg value="native/thread.c"/>
+        <arg value="native/system.c"/>
+        <arg value="native/file.c"/>
+      </java>
+    </sequential>
+  </macrodef>
+
+  <target name="win32" depends="jar" description="build library file">
+    <build bits="32" name="win" ext=".dll" a=".a"/>
+  </target>
+
+  <target name="win64" depends="jar" description="build library file">
+    <build bits="64" name="win" ext=".dll" a=".a"/>
+  </target>
+
+  <target name="lnx32" depends="jar" description="build library file">
+    <build bits="32" name="lnx" ext=".so" a=""/>
+  </target>
+
+  <target name="lnx64" depends="jar" description="build library file">
+    <build bits="64" name="lnx" ext=".so" a=""/>
+  </target>
+
+  <target name="help">
+    <echo>ant win32  // build Windows 32 library</echo>
+    <echo>ant win64  // build Windows 64 library</echo>
+    <echo>ant lnx32  // build Linux 32 library</echo>
+    <echo>ant lnx64  // build Linux 64 library</echo>
+  </target>
+</project>

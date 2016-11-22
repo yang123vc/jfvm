@@ -1,0 +1,73 @@
+<project name="jfvm" default="help" basedir=".">
+  <description>native</description>
+  <property environment="env"/>
+
+  <macrodef name="winbuild">
+    <attribute name="gcc"/>
+    <attribute name="dlltool"/>
+    <attribute name="bits"/>
+    <attribute name="name"/>
+    <attribute name="platform"/>
+    <attribute name="ext"/>
+    <sequential>
+      <exec command="@{gcc} -m@{bits} -g -DX@{bits} -D@{platform} -I ../include -g src/arc.c -c -o arc.o"/>
+      <exec command="@{gcc} -m@{bits} -g -DX@{bits} -D@{platform} -I ../include -g src/exception.c -c -o exception.o"/>
+      <exec command="@{gcc} -m@{bits} -g -DX@{bits} -D@{platform} -I ../include -g src/object.c -c -o object.o"/>
+      <exec command="@{gcc} -m@{bits} -g -DX@{bits} -D@{platform} -I ../include -g src/class.c -c -o class.o"/>
+      <exec command="@{gcc} -m@{bits} -g -DX@{bits} -D@{platform} -I ../include -g src/system.c -c -o system.o"/>
+      <exec command="@{gcc} -m@{bits} -g -DX@{bits} -D@{platform} -I ../include -g src/native.c -c -o native.o"/>
+      <delete file="../lib/jfvm-@{name}@{bits}@{ext}.a"/>
+      <exec command="@{dlltool} --export-all-symbols -D jfvm-@{name}@{bits}@{ext} -e exports.o -l ../lib/jfvm-@{name}@{bits}@{ext}.a arc.o exception.o object.o class.o system.o native.o"/>
+      <delete file="../lib/jfvm-@{name}@{bits}@{ext}"/>
+      <exec command="@{gcc} -m@{bits} -shared -o ../lib/jfvm-@{name}@{bits}@{ext} arc.o exception.o object.o class.o system.o native.o exports.o"/>
+      <delete>
+        <fileset dir="." includes="*.o"/>
+      </delete>
+    </sequential>
+  </macrodef>
+
+  <macrodef name="lnxbuild">
+    <attribute name="gcc"/>
+    <attribute name="bits"/>
+    <attribute name="name"/>
+    <attribute name="platform"/>
+    <attribute name="ext"/>
+    <sequential>
+      <exec command="@{gcc} -m@{bits} -g -DX@{bits} -D@{platform} -fPIC -I ../include -g src/arc.c -c -o arc.o"/>
+      <exec command="@{gcc} -m@{bits} -g -DX@{bits} -D@{platform} -fPIC -I ../include -g src/exception.c -c -o exception.o"/>
+      <exec command="@{gcc} -m@{bits} -g -DX@{bits} -D@{platform} -fPIC -I ../include -g src/object.c -c -o object.o"/>
+      <exec command="@{gcc} -m@{bits} -g -DX@{bits} -D@{platform} -fPIC -I ../include -g src/class.c -c -o class.o"/>
+      <exec command="@{gcc} -m@{bits} -g -DX@{bits} -D@{platform} -fPIC -I ../include -g src/system.c -c -o system.o"/>
+      <exec command="@{gcc} -m@{bits} -g -DX@{bits} -D@{platform} -fPIC -I ../include -g src/native.c -c -o native.o"/>
+      <delete file="../lib/jfvm-@{name}@{bits}@{ext}"/>
+      <exec command="@{gcc} -m@{bits} -shared -o ../lib/jfvm-@{name}@{bits}@{ext} arc.o exception.o object.o class.o system.o native.o"/>
+      <delete>
+        <fileset dir="." includes="*.o"/>
+      </delete>
+    </sequential>
+  </macrodef>
+
+  <target name="win32" description="create windows native dll">
+    <winbuild bits="32" gcc="i686-w64-mingw32-gcc" dlltool="i686-w64-mingw32-dlltool" name="win" platform="JFVM_WIN" ext=".dll"/>
+  </target>
+
+  <target name="win64" description="create windows native dll">
+    <winbuild bits="64" gcc="x86_64-w64-mingw32-gcc" dlltool="x86_64-w64-mingw32-dlltool" name="win" platform="JFVM_WIN" ext=".dll"/>
+  </target>
+
+  <target name="lnx32" description="create windows native dll">
+    <lnxbuild bits="32" gcc="gcc" name="lnx" platform="JFVM_LNX" ext=".so"/>
+  </target>
+
+  <target name="lnx64" description="create windows native dll">
+    <lnxbuild bits="64" gcc="gcc" name="lnx" platform="JFVM_LNX" ext=".so"/>
+  </target>
+
+  <target name="help">
+    <echo>ant win32  // build Windows 32 library</echo>
+    <echo>ant win64  // build Windows 64 library</echo>
+    <echo>ant lnx32  // build Linux 32 library</echo>
+    <echo>ant lnx64  // build Linux 64 library</echo>
+  </target>
+
+</project>

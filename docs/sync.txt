@@ -1,0 +1,6 @@
+synchronization is implemented using a mutex (CriticalSection in Windows) and condition variables.
+  The Mutex are used to synchronize blocks of code / methods.
+  Condition variables are used for Object.wait() and Object.notify() / notifyAll()
+On Windows this requires WinNT 6.0 (Vista) or better.  (WinXP/Server2003 are not supported)
+On Linux this uses pthreads
+

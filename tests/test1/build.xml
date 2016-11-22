@@ -1,0 +1,71 @@
+<project name="test" default="help" basedir=".">
+  <description>test</description>
+  <!-- set global properties for this build -->
+  <property name="src" location="src"/>
+  <property name="build" location="classes"/>
+
+  <target name="compile" description="compile the source">
+    <!-- Compile the java code from ${src} into ${build} -->
+    <mkdir dir="${build}"/>
+    <javac srcdir="${src}" destdir="${build}" target="1.8" source="1.8" debug="true">
+    </javac>
+  </target>
+
+  <target name="jar" depends="compile" description="build jar file">
+    <!-- Build jar file from class files -->
+    <jar destfile="test.jar" includes="**/*.class" basedir="${build}">
+      <manifest>
+        <attribute name="Main-Class" value="pack.Test"/>
+      </manifest>
+    </jar>
+  </target>
+
+  <macrodef name="build">
+    <attribute name="bits"/>
+    <attribute name="name"/>
+    <attribute name="libext"/>
+    <attribute name="exeext"/>
+    <sequential>
+      <exec command="java -jar ../../bin/jfvmc.jar --@{bits} -g test.jar --cp ../../lib/jfvm.jar --out test@{libext} --natives native.c"/>
+      <copy file="../../lib/classpath-@{name}@{bits}@{libext}" todir="."/>
+      <copy file="../../lib/jfvm-@{name}@{bits}@{libext}" todir="."/>
+      <exec command="java -jar ../../bin/jfvml.jar --@{bits} -g classpath-@{name}@{bits} test --main pack.Test --out test@{exeext}"/>
+    </sequential>
+  </macrodef>
+
+  <target name="win32" depends="jar">
+    <copy file="../../lib/jfvm-win32.dll.a" todir="."/>
+    <build bits="32" name="win" libext=".dll" exeext=".exe"/>
+  </target>
+
+  <target name="win64" depends="jar">
+    <copy file="../../lib/jfvm-win64.dll.a" todir="."/>
+    <build bits="64" name="win" libext=".dll" exeext=".exe"/>
+  </target>
+
+  <target name="lnx32" depends="jar">
+    <build bits="32" name="lnx" libext=".so" exeext=""/>
+    <exec command="chmod +x test"/>
+  </target>
+
+  <target name="lnx64" depends="jar">
+    <build bits="64" name="lnx" libext=".so" exeext=""/>
+    <exec command="chmod +x test"/>
+  </target>
+
+  <target name="clean" description="deletes compiled files">
+    <delete>
+      <fileset dir="${build}" includes="**/*.class"/>
+      <fileset dir="." includes="**/*.o"/>
+      <fileset dir="ces" includes="**/*.c"/>
+    </delete>
+  </target>
+
+  <target name="help">
+    <echo>ant win32  // build Windows 32 library</echo>
+    <echo>ant win64  // build Windows 64 library</echo>
+    <echo>ant lnx32  // build Linux 32 library</echo>
+    <echo>ant lnx64  // build Linux 64 library</echo>
+  </target>
+
+</project>

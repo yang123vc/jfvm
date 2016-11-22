@@ -1,0 +1,4 @@
+ChangeLog...
+
+Nov 22/2016 : v0.1 released!
+  - first public release

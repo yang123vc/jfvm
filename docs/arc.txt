@@ -1,0 +1,21 @@
+ARC (Automatic Reference Counting)
+==================================
+
+jfvm uses ARC instead of a traditional GC (garbage collector).
+
+ARC is implemeted using micro-spin locks (using __atomic features of GCC 4.7+) which 'acquire' (increment) and 'release' (decrement) objects while locked.
+These are NOT mutex locks.  Those are used for synchronized blocks and methods.  See sync.txt
+Because of the way an acquire spin lock works Objects that reach a reference count of zero need to be delayed freeing in case another thread was trying to acquire it.
+The Object Destroyer thread does this by queuing all objects to be deleted ensuring a minimum of 100ms before freeing an Object.
+
+In order to get/set Objects in native code you must do so with special getters and setters to maintain reference counting.
+At the end of every function all Objects must be 'released' except for the return value.
+
+jfvm_release_stack() can be used to release an array of Slot's
+jfvm_arc_inc() can increment a reference count
+jfvm_arc_dec() can decrement a reference count
+
+All objects are created with a ref count of 1.  When the count reaches zero it is queued for deletion.
+
+The Object Destroyer thread will process the delection queue, calling finalize() on each Object and if the finalize() method didn't try to keep the Object alive it will
+then be deleted.

@@ -1,0 +1,60 @@
+See include/jfvm.h for most C structures and jfvm_... functions.
+
+struct Class - represents one class with reflection data
+struct Object - represents one instance of a class
+struct Slot - represents one slot used for arguments/local vars, and the operand stack.
+  The Slot is a union of all data types possible, plus a 'type' field that defines what the slot is storing.
+
+Every method is defined as:
+void java_classpath_method(JVM *jvm, Slot *local);
+For non-static methods the 'this' pointer would be in local[0] and arg1,arg2,... would be in local[1], local[2], ...
+For static methods there is no 'this' pointer and arg1,arg2,... would be in local[0], local[1], ...
+Return values are placed in local[0]
+
+Native methods are the same as normal methods, but are supplied in a C file.
+
+The jfvm compiler (jfmvc.jar) basically converts a JAR into a DLL(so) file.
+The jfvm linker (jfmvl.jar) builds the C main() function which will load DLLs for the classpath and starts the Java "static void main(String args[])" method.
+
+The operand stack is always large enough to pass arguments to the next function PLUS any extra local slots the function needs.
+
+Building native functions is more complex than JNI.  Special care must be taken in regards to ARC memory management.
+
+Native function examples:
+
+//Java
+
+package mypack;
+
+public class myclass {
+  public native int myfunc(int v1);
+
+  public native static int mystatic(int v1);
+}
+
+//C
+
+#include <jfvm.h>
+
+void java_mypack_myclass_myfunc(JVM *jvm, Slot *local) {
+  //local[0].obj = this
+  //local[1].i32 = v1
+
+  //...your code here...
+
+  jfvm_release_stack(jvm, local, 2);  //this function is defined as having 2 locals
+  local[0].i32 = 123;  //return value
+  local[0].type = 'I';  //define as integer
+}
+
+void java_mypack_myclass_mystatic(JVM *jvm, Slot *local) {
+  //local[0].i32 = v1
+
+  //...your code here...
+
+  jfvm_release_stack(jvm, local, 1);  //this function is defined as having 1 local
+  local[0].i32 = 123;  //return value
+  local[0].type = 'I';  //define as integer
+}
+
+See the project source for more examples.
