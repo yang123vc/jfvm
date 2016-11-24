@@ -68,7 +68,7 @@ int jfvm_patch_classes(JVM *jvm, Class **classes) {
 }
 
 Class *jfvm_find_class(JVM *jvm, const char *name) {
-  Slot *stack;
+  Slot stack[1] = {{0,0}};
   void (*clinit)(JVM *jvm, Slot *local);
   if (name == NULL) return NULL;
   for(int a=0;a<class_pool_size;a++) {
@@ -78,7 +78,6 @@ Class *jfvm_find_class(JVM *jvm, const char *name) {
       if (strcmp(cls->name, name) == 0) {
         while (!__atomic_test_and_set(&cls->object_clinit_reflck, __ATOMIC_SEQ_CST)) {};
         if (cls->object_clinit != NULL) {
-          stack = jfvm_stack_alloc(jvm, jfvm_get_static_method_local(jvm, cls, jfvm_get_method_clsidx(jvm, cls, "<clinit>()V")));
           clinit = cls->object_clinit;
           cls->object_clinit = NULL;
           //catch exceptions
@@ -89,7 +88,6 @@ Class *jfvm_find_class(JVM *jvm, const char *name) {
             //TODO : log exception
           }
           jfvm_ucatch_unwind(jvm);
-          jfvm_stack_free(jvm, stack);
         }
         __atomic_clear(&cls->object_clinit_reflck, __ATOMIC_SEQ_CST);
         return cls;
@@ -263,14 +261,6 @@ int jfvm_get_method_objidx(JVM *jvm, Class *cls, const char *name_desc) {
   return -1;
 }
 
-int jfvm_get_method_local(JVM *jvm, Class *cls, int clsidx) {
-  return cls->methods[clsidx].local;
-}
-
-int jfvm_get_static_method_local(JVM *jvm, Class *cls, int clsidx) {
-  return cls->static_methods[clsidx].local;
-}
-
 int jfvm_get_static_field_clsidx(JVM *jvm, Class *cls, const char *name_desc) {
   Field *field = cls->static_fields;
   int idx = 0;
@@ -322,7 +312,7 @@ Object* jfvm_new_string(JVM *jvm, const char *str, int len) {
   Class *strcls = jfvm_find_class(jvm, "java/lang/String");  //TODO : cache this
   Object *strobj;
   int clsidx = jfvm_get_method_clsidx(jvm, strcls, "<init>([B)V");  //TODO : cache this
-  Slot *stack = jfvm_stack_alloc(jvm, jfvm_get_method_local(jvm, strcls, clsidx) + 1);  //+1 for dup
+  Slot *stack = jfvm_stack_alloc(jvm, 3);
 
   //new String()
   stackpos++;

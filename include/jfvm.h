@@ -355,10 +355,6 @@ int jfvm_get_method_objidx(JVM *jvm, Class *cls, const char *name_desc);  //invo
 int jfvm_get_field_objidx(JVM *jvm, Class *cls, const char *name);
 /** Returns the clsidx (class index) of a static field. */
 int jfvm_get_static_field_clsidx(JVM *jvm, Class *cls, const char *name);
-/** Returns the local stack size required by a method. */
-int jfvm_get_method_local(JVM *jvm, Class *cls, int clsidx);
-/** Returns the local stack size required by a static method. */
-int jfvm_get_static_method_local(JVM *jvm, Class *cls, int clsidx);
 /** Creates a lambda object. */
 Object* jfvm_create_lambda(JVM *jvm, Class *cls, int objidx, void *method);
 

@@ -23,7 +23,6 @@ public class Compiler {
   private int localCount;
   private int stackCount;
   private int argsCount;
-  private int xstackCount;  //extra stack (for locals in called functions)
   private boolean isVoid;
   private ArrayList<String> classes;
   private int jsridx;
@@ -90,7 +89,7 @@ public class Compiler {
       //output forward decl for methods
       for(int a=0;a<smcnt;a++) {
         Method m = cls.MethodList[a];
-        cls_pre.append("void " + m.cname + "(JVM *jvm, Slot *local); //" + m.name_desc + "\n");
+        cls_pre.append("void " + m.cname + "(JVM *jvm, Slot *args); //" + m.name_desc + "\n");
       }
 
       cls_pre.append("static Method class_methods[] = {\n");
@@ -106,7 +105,7 @@ public class Compiler {
         cls_pre.append(", .desc = " + quoteString(m.desc) + "\n");
         cls_pre.append(", .name_desc = " + quoteString(m.name_desc) + "\n");
         cls_pre.append(", .flgs = " + m.flgs + "\n");
-        cls_pre.append(", .local = " + m.local + "\n");
+//        cls_pre.append(", .local = " + m.local + "\n");
         if (m.isAbstract) {
           cls_pre.append(", .method = NULL\n");
         } else {
@@ -132,7 +131,7 @@ public class Compiler {
         cls_pre.append(", .desc = " + quoteString(m.desc) + "\n");
         cls_pre.append(", .name_desc = " + quoteString(m.name_desc) + "\n");
         cls_pre.append(", .flgs = " + m.flgs + "\n");
-        cls_pre.append(", .local = " + m.local + "\n");
+//        cls_pre.append(", .local = " + m.local + "\n");
         cls_pre.append(", .method = &" + m.cname + "\n");
         cls_pre.append(", .offset = " + m.objidx + "\n");
         cls_pre.append("}\n");
@@ -230,8 +229,8 @@ public class Compiler {
     String sfield;
     String smethod;
     String type;
+    String slot;
     jsridx = 0;
-    xstackCount = 0;
     mth_pre = new StringBuffer();
     mth = new StringBuffer();
     try {
@@ -241,17 +240,16 @@ public class Compiler {
       pc = 0;
       wide = false;
       mth_pre.append("void " + method.cname);
-      mth_pre.append("(JVM *jvm, Slot *local) {\n");
+      mth_pre.append("(JVM *jvm, Slot *args) {\n");
       isVoid = method.isVoid();
-      localCount = code.max_locals;  //includes argsCount
-      if (localCount == 0 && !isVoid) { localCount++; } //need a place to store return value
+      localCount = method.xlocal;
       stackCount = code.max_stack;
-      argsCount = method.getArgsCount();
-      if ((localCount - argsCount) < 0) System.out.println("Error:bad method:local < args count:" + cls.name + "." + method.name);
+      argsCount = method.getArgsCount();  //includes 'this'
+      if (argsCount == 0 && !isVoid) { argsCount++; } //need a place to store return value
       mth_pre.append("  //" + method.name + method.desc + ",args=" + argsCount + ",locals=" + localCount + ",stack=" + stackCount + "\n");
       mth.append("#ifdef JFVM_DEBUG_METHOD\n");
       if (!method.isStatic)
-        mth.append("  printf(\"m  start:%p:%p:%s\\n\", jvm->thread, local[0].obj, " + quoteString(method.cname) + ");\n");
+        mth.append("  printf(\"m  start:%p:%p:%s\\n\", jvm->thread, args[0].obj, " + quoteString(method.cname) + ");\n");
       else
         mth.append("  printf(\"m  start:%p:%s\\n\", jvm->thread, " + quoteString(method.cname) + ");\n");
       mth.append("#endif\n");
@@ -262,7 +260,7 @@ public class Compiler {
       }
       addExceptions(code);
       if (method.name.equals("<clinit>")) {
-        mth.append("  object_clsinit(jvm, local);\n");
+        mth.append("  object_clsinit(jvm, args);\n");
       }
       if (method.isLambda) {
         //lambda functions are static but code generated calls them like they are virtual ???
@@ -320,34 +318,68 @@ public class Compiler {
             } else {
               idx = readByte();
             }
+            if (idx >= argsCount) {
+              slot = "local";
+              idx -= argsCount;
+            } else {
+              slot = "args";
+            }
             mth.append("  stackpos++;\n");
-            mth.append("  stack[stackpos].obj = local[" + idx + "].obj;\n");
-            mth.append("  stack[stackpos].type = local[" + idx + "].type;\n");
-            mth.append("  jfvm_arc_inc(jvm, local[" + idx + "].obj);\n");
+            mth.append("  stack[stackpos].obj = " + slot + "[" + idx + "].obj;\n");
+            mth.append("  stack[stackpos].type = " + slot + "[" + idx + "].type;\n");
+            mth.append("  jfvm_arc_inc(jvm, " + slot + "[" + idx + "].obj);\n");
             break;
           case 0x2a:  //aload_0
+            idx = 0;
+            if (idx >= argsCount) {
+              slot = "local";
+              idx -= argsCount;
+            } else {
+              slot = "args";
+            }
             mth.append("  stackpos++;\n");
-            mth.append("  stack[stackpos].obj = local[0].obj;\n");
+            mth.append("  stack[stackpos].obj = " + slot + "[" + idx + "].obj;\n");
             mth.append("  stack[stackpos].type = 'L';\n");
-            mth.append("  jfvm_arc_inc(jvm, local[0].obj);\n");
+            mth.append("  jfvm_arc_inc(jvm, " + slot + "[" + idx + "].obj);\n");
             break;
           case 0x2b:  //aload_1
+            idx = 1;
+            if (idx >= argsCount) {
+              slot = "local";
+              idx -= argsCount;
+            } else {
+              slot = "args";
+            }
             mth.append("  stackpos++;\n");
-            mth.append("  stack[stackpos].obj = local[1].obj;\n");
+            mth.append("  stack[stackpos].obj = " + slot + "[" + idx + "].obj;\n");
             mth.append("  stack[stackpos].type = 'L';\n");
-            mth.append("  jfvm_arc_inc(jvm, local[1].obj);\n");
+            mth.append("  jfvm_arc_inc(jvm, " + slot + "[" + idx + "].obj);\n");
             break;
           case 0x2c:  //aload_2
+            idx = 2;
+            if (idx >= argsCount) {
+              slot = "local";
+              idx -= argsCount;
+            } else {
+              slot = "args";
+            }
             mth.append("  stackpos++;\n");
-            mth.append("  stack[stackpos].obj = local[2].obj;\n");
-            mth.append("  stack[stackpos].type = local[2].type;\n");
-            mth.append("  jfvm_arc_inc(jvm, local[2].obj);\n");
+            mth.append("  stack[stackpos].obj = " + slot + "[" + idx + "].obj;\n");
+            mth.append("  stack[stackpos].type = 'L';\n");
+            mth.append("  jfvm_arc_inc(jvm, " + slot + "[" + idx + "].obj);\n");
             break;
           case 0x2d:  //aload_3
+            idx = 3;
+            if (idx >= argsCount) {
+              slot = "local";
+              idx -= argsCount;
+            } else {
+              slot = "args";
+            }
             mth.append("  stackpos++;\n");
-            mth.append("  stack[stackpos].obj = local[3].obj;\n");
-            mth.append("  stack[stackpos].type = local[3].type;\n");
-            mth.append("  jfvm_arc_inc(jvm, local[3].obj);\n");
+            mth.append("  stack[stackpos].obj = " + slot + "[" + idx + "].obj;\n");
+            mth.append("  stack[stackpos].type = 'L';\n");
+            mth.append("  jfvm_arc_inc(jvm, " + slot + "[" + idx + "].obj);\n");
             break;
           case 0xbd:  //anewarray
             //count -> arrayref
@@ -369,47 +401,81 @@ public class Compiler {
             mth.append("  stack[stackpos].type = 'I';\n");
             break;
           case 0x3a:  //astore
-            //objectref -> local[idx]
+            //objectref -> local [idx]
             if (wide) {
               idx = readShort();
             } else {
               idx = readByte();
             }
-            mth.append("  if (local[" + idx + "].type == 'L') jfvm_arc_release(jvm, &local[" + idx + "]);\n");
-            mth.append("  local[" + idx + "].obj = stack[stackpos].obj;\n");
-            mth.append("  local[" + idx + "].type = stack[stackpos].type;\n");
+            if (idx >= argsCount) {
+              slot = "local";
+              idx -= argsCount;
+            } else {
+              slot = "args";
+            }
+            mth.append("  if (" + slot + "[" + idx + "].type == 'L') jfvm_arc_release(jvm, &" + slot + "[" + idx + "]);\n");
+            mth.append("  " + slot + "[" + idx + "].obj = stack[stackpos].obj;\n");
+            mth.append("  " + slot + "[" + idx + "].type = stack[stackpos].type;\n");
             mth.append("  stack[stackpos].type = 0;\n");
             mth.append("  stackpos--;\n");
             break;
           case 0x4b:  //astore_0
-            //objectref -> local[0]
-            mth.append("  if (local[0].type == 'L') jfvm_arc_release(jvm, &local[0]);\n");
-            mth.append("  local[0].obj = stack[stackpos].obj;\n");
-            mth.append("  local[0].type = stack[stackpos].type;\n");
+            //objectref -> local [0]
+            idx = 0;
+            if (idx >= argsCount) {
+              slot = "local";
+              idx -= argsCount;
+            } else {
+              slot = "args";
+            }
+            mth.append("  if (" + slot + "[" + idx + "].type == 'L') jfvm_arc_release(jvm, &" + slot + "[" + idx + "]);\n");
+            mth.append("  " + slot + "[" + idx + "].obj = stack[stackpos].obj;\n");
+            mth.append("  " + slot + "[" + idx + "].type = stack[stackpos].type;\n");
             mth.append("  stack[stackpos].type = 0;\n");
             mth.append("  stackpos--;\n");
             break;
           case 0x4c:  //astore_1
-            //objectref -> local[1]
-            mth.append("  if (local[1].type == 'L') jfvm_arc_release(jvm, &local[1]);\n");
-            mth.append("  local[1].obj = stack[stackpos].obj;\n");
-            mth.append("  local[1].type = stack[stackpos].type;\n");
+            //objectref -> local [1]
+            idx = 1;
+            if (idx >= argsCount) {
+              slot = "local";
+              idx -= argsCount;
+            } else {
+              slot = "args";
+            }
+            mth.append("  if (" + slot + "[" + idx + "].type == 'L') jfvm_arc_release(jvm, &" + slot + "[" + idx + "]);\n");
+            mth.append("  " + slot + "[" + idx + "].obj = stack[stackpos].obj;\n");
+            mth.append("  " + slot + "[" + idx + "].type = stack[stackpos].type;\n");
             mth.append("  stack[stackpos].type = 0;\n");
             mth.append("  stackpos--;\n");
             break;
           case 0x4d:  //astore_2
-            //objectref -> local[2]
-            mth.append("  if (local[2].type == 'L') jfvm_arc_release(jvm, &local[2]);\n");
-            mth.append("  local[2].obj = stack[stackpos].obj;\n");
-            mth.append("  local[2].type = stack[stackpos].type;\n");
+            //objectref -> local [2]
+            idx = 2;
+            if (idx >= argsCount) {
+              slot = "local";
+              idx -= argsCount;
+            } else {
+              slot = "args";
+            }
+            mth.append("  if (" + slot + "[" + idx + "].type == 'L') jfvm_arc_release(jvm, &" + slot + "[" + idx + "]);\n");
+            mth.append("  " + slot + "[" + idx + "].obj = stack[stackpos].obj;\n");
+            mth.append("  " + slot + "[" + idx + "].type = stack[stackpos].type;\n");
             mth.append("  stack[stackpos].type = 0;\n");
             mth.append("  stackpos--;\n");
             break;
           case 0x4e:  //astore_3
-            //objectref -> local[3]
-            mth.append("  if (local[3].type == 'L') jfvm_arc_release(jvm, &local[3]);\n");
-            mth.append("  local[3].obj = stack[stackpos].obj;\n");
-            mth.append("  local[3].type = stack[stackpos].type;\n");
+            //objectref -> local [3]
+            idx = 3;
+            if (idx >= argsCount) {
+              slot = "local";
+              idx -= argsCount;
+            } else {
+              slot = "args";
+            }
+            mth.append("  if (" + slot + "[" + idx + "].type == 'L') jfvm_arc_release(jvm, &" + slot + "[" + idx + "]);\n");
+            mth.append("  " + slot + "[" + idx + "].obj = stack[stackpos].obj;\n");
+            mth.append("  " + slot + "[" + idx + "].type = stack[stackpos].type;\n");
             mth.append("  stack[stackpos].type = 0;\n");
             mth.append("  stackpos--;\n");
             break;
@@ -563,28 +629,62 @@ public class Compiler {
             } else {
               idx = readByte();
             }
+            if (idx >= argsCount) {
+              slot = "local";
+              idx -= argsCount;
+            } else {
+              slot = "args";
+            }
             mth.append("  stackpos++;\n");
-            mth.append("  stack[stackpos].f64 = local[" + idx + "].f64;\n");
+            mth.append("  stack[stackpos].f64 = " + slot + "[" + idx + "].f64;\n");
             mth.append("  stack[stackpos].type = 'D';\n");
             break;
           case 0x26:  //dload_0
+            idx = 0;
+            if (idx >= argsCount) {
+              slot = "local";
+              idx -= argsCount;
+            } else {
+              slot = "args";
+            }
             mth.append("  stackpos++;\n");
-            mth.append("  stack[stackpos].f64 = local[0].f64;\n");
+            mth.append("  stack[stackpos].f64 = " + slot + "[" + idx + "].f64;\n");
             mth.append("  stack[stackpos].type = 'D';\n");
             break;
           case 0x27:  //dload_1
+            idx = 1;
+            if (idx >= argsCount) {
+              slot = "local";
+              idx -= argsCount;
+            } else {
+              slot = "args";
+            }
             mth.append("  stackpos++;\n");
-            mth.append("  stack[stackpos].f64 = local[1].f64;\n");
+            mth.append("  stack[stackpos].f64 = " + slot + "[" + idx + "].f64;\n");
             mth.append("  stack[stackpos].type = 'D';\n");
             break;
           case 0x28:  //dload_2
+            idx = 2;
+            if (idx >= argsCount) {
+              slot = "local";
+              idx -= argsCount;
+            } else {
+              slot = "args";
+            }
             mth.append("  stackpos++;\n");
-            mth.append("  stack[stackpos].f64 = local[2].f64;\n");
+            mth.append("  stack[stackpos].f64 = " + slot + "[" + idx + "].f64;\n");
             mth.append("  stack[stackpos].type = 'D';\n");
             break;
           case 0x29:  //dload_3
+            idx = 3;
+            if (idx >= argsCount) {
+              slot = "local";
+              idx -= argsCount;
+            } else {
+              slot = "args";
+            }
             mth.append("  stackpos++;\n");
-            mth.append("  stack[stackpos].f64 = local[3].f64;\n");
+            mth.append("  stack[stackpos].f64 = " + slot + "[" + idx + "].f64;\n");
             mth.append("  stack[stackpos].type = 'D';\n");
             break;
           case 0x6b:  //dmul
@@ -809,28 +909,62 @@ public class Compiler {
             } else {
               idx = readByte();
             }
+            if (idx >= argsCount) {
+              slot = "local";
+              idx -= argsCount;
+            } else {
+              slot = "args";
+            }
             mth.append("  stackpos++;\n");
-            mth.append("  stack[stackpos].f32 = local[" + idx + "].f32;\n");
+            mth.append("  stack[stackpos].f32 = " + slot + "[" + idx + "].f32;\n");
             mth.append("  stack[stackpos].type = 'F';\n");
             break;
           case 0x22:  //fload_0
+            idx = 0;
+            if (idx >= argsCount) {
+              slot = "local";
+              idx -= argsCount;
+            } else {
+              slot = "args";
+            }
             mth.append("  stackpos++;\n");
-            mth.append("  stack[stackpos].f32 = local[0].f32;\n");
+            mth.append("  stack[stackpos].f32 = " + slot + "[" + idx + "].f32;\n");
             mth.append("  stack[stackpos].type = 'F';\n");
             break;
           case 0x23:  //fload_1
+            idx = 1;
+            if (idx >= argsCount) {
+              slot = "local";
+              idx -= argsCount;
+            } else {
+              slot = "args";
+            }
             mth.append("  stackpos++;\n");
-            mth.append("  stack[stackpos].f32 = local[1].f32;\n");
+            mth.append("  stack[stackpos].f32 = " + slot + "[" + idx + "].f32;\n");
             mth.append("  stack[stackpos].type = 'F';\n");
             break;
           case 0x24:  //fload_2
+            idx = 2;
+            if (idx >= argsCount) {
+              slot = "local";
+              idx -= argsCount;
+            } else {
+              slot = "args";
+            }
             mth.append("  stackpos++;\n");
-            mth.append("  stack[stackpos].f32 = local[2].f32;\n");
+            mth.append("  stack[stackpos].f32 = " + slot + "[" + idx + "].f32;\n");
             mth.append("  stack[stackpos].type = 'F';\n");
             break;
           case 0x25:  //fload_3
+            idx = 3;
+            if (idx >= argsCount) {
+              slot = "local";
+              idx -= argsCount;
+            } else {
+              slot = "args";
+            }
             mth.append("  stackpos++;\n");
-            mth.append("  stack[stackpos].f32 = local[3].f32;\n");
+            mth.append("  stack[stackpos].f32 = " + slot + "[" + idx + "].f32;\n");
             mth.append("  stack[stackpos].type = 'F';\n");
             break;
           case 0x6a:  //fmul
@@ -1121,7 +1255,13 @@ public class Compiler {
               idx = readByte();
               val = readByte();
             }
-            mth.append("  local[" + idx + "].i32 += " + val + ";\n");
+            if (idx >= argsCount) {
+              slot = "local";
+              idx -= argsCount;
+            } else {
+              slot = "args";
+            }
+            mth.append("  " + slot + "[" + idx + "].i32 += " + val + ";\n");
             break;
           case 0x15:  //iload
             if (wide) {
@@ -1129,28 +1269,62 @@ public class Compiler {
             } else {
               idx = readByte();
             }
+            if (idx >= argsCount) {
+              slot = "local";
+              idx -= argsCount;
+            } else {
+              slot = "args";
+            }
             mth.append("  stackpos++;\n");
-            mth.append("  stack[stackpos].i32 = local[" + idx + "].i32;\n");
+            mth.append("  stack[stackpos].i32 = " + slot + "[" + idx + "].i32;\n");
             mth.append("  stack[stackpos].type = 'I';\n");
             break;
           case 0x1a:  //iload_0
+            idx = 0;
+            if (idx >= argsCount) {
+              slot = "local";
+              idx -= argsCount;
+            } else {
+              slot = "args";
+            }
             mth.append("  stackpos++;\n");
-            mth.append("  stack[stackpos].i32 = local[0].i32;\n");
+            mth.append("  stack[stackpos].i32 = " + slot + "[" + idx + "].i32;\n");
             mth.append("  stack[stackpos].type = 'I';\n");
             break;
           case 0x1b:  //iload_1
+            idx = 1;
+            if (idx >= argsCount) {
+              slot = "local";
+              idx -= argsCount;
+            } else {
+              slot = "args";
+            }
             mth.append("  stackpos++;\n");
-            mth.append("  stack[stackpos].i32 = local[1].i32;\n");
+            mth.append("  stack[stackpos].i32 = " + slot + "[" + idx + "].i32;\n");
             mth.append("  stack[stackpos].type = 'I';\n");
             break;
           case 0x1c:  //iload_2
+            idx = 2;
+            if (idx >= argsCount) {
+              slot = "local";
+              idx -= argsCount;
+            } else {
+              slot = "args";
+            }
             mth.append("  stackpos++;\n");
-            mth.append("  stack[stackpos].i32 = local[2].i32;\n");
+            mth.append("  stack[stackpos].i32 = " + slot + "[" + idx + "].i32;\n");
             mth.append("  stack[stackpos].type = 'I';\n");
             break;
           case 0x1d:  //iload_3
+            idx = 3;
+            if (idx >= argsCount) {
+              slot = "local";
+              idx -= argsCount;
+            } else {
+              slot = "args";
+            }
             mth.append("  stackpos++;\n");
-            mth.append("  stack[stackpos].i32 = local[3].i32;\n");
+            mth.append("  stack[stackpos].i32 = " + slot + "[" + idx + "].i32;\n");
             mth.append("  stack[stackpos].type = 'I';\n");
             break;
           case 0x68:  //imul
@@ -1202,9 +1376,6 @@ public class Compiler {
               type = cls.getConstType(methodRef.name_type_idx);
             }
             xmethod = xcls.getMethod(smethod + type);
-            if (xmethod.xlocal > xstackCount) {
-              xstackCount = xmethod.xlocal;
-            }
             cnt = xmethod.getArgsCount();
             cnt--;
             mth.append("  if (stack[stackpos" + getStackOffsetToArgs(cnt) + "].obj == NULL) jfvm_throw_npe(jvm);\n");
@@ -1222,9 +1393,6 @@ public class Compiler {
             smethod = cls.getConstName(methodRef.name_type_idx);
             type = cls.getConstType(methodRef.name_type_idx);
             xmethod = xcls.getMethod(smethod + type);
-            if (xmethod.xlocal > xstackCount) {
-              xstackCount = xmethod.xlocal;
-            }
             cnt = xmethod.getArgsCount();
             cnt--;
             mth.append("  if (stack[stackpos" + getStackOffsetToArgs(cnt) + "].obj == NULL) jfvm_throw_npe(jvm);\n");
@@ -1242,9 +1410,6 @@ public class Compiler {
             smethod = cls.getConstName(methodRef.name_type_idx);
             type = cls.getConstType(methodRef.name_type_idx);
             xmethod = xcls.getMethod(smethod + type);
-            if (xmethod.xlocal > xstackCount) {
-              xstackCount = xmethod.xlocal;
-            }
             cnt = xmethod.getArgsCount();
             cnt--;
             mth.append("  //" + xcls.name + "." + smethod + type + "\n");
@@ -1265,9 +1430,6 @@ public class Compiler {
             }
             xcls = clspool.getClass(scls);
             xmethod = xcls.getMethod(smethod + type);
-            if (xmethod.xlocal > xstackCount) {
-              xstackCount = xmethod.xlocal;
-            }
             cnt = xmethod.getArgsCount();
             cnt--;
             mth.append("  if (stack[stackpos" + getStackOffsetToArgs(cnt) + "].obj == NULL) jfvm_throw_npe(jvm);\n");
@@ -1452,28 +1614,62 @@ public class Compiler {
             } else {
               idx = readByte();
             }
+            if (idx >= argsCount) {
+              slot = "local";
+              idx -= argsCount;
+            } else {
+              slot = "args";
+            }
             mth.append("  stackpos++;\n");
-            mth.append("  stack[stackpos].i64 = local[" + idx + "].i64;\n");
+            mth.append("  stack[stackpos].i64 = " + slot + "[" + idx + "].i64;\n");
             mth.append("  stack[stackpos].type = 'J';\n");
             break;
           case 0x1e:  //lload_0
+            idx = 0;
+            if (idx >= argsCount) {
+              slot = "local";
+              idx -= argsCount;
+            } else {
+              slot = "args";
+            }
             mth.append("  stackpos++;\n");
-            mth.append("  stack[stackpos].i64 = local[0].i64;\n");
+            mth.append("  stack[stackpos].i64 = " + slot + "[" + idx + "].i64;\n");
             mth.append("  stack[stackpos].type = 'J';\n");
             break;
           case 0x1f:  //lload_1
+            idx = 1;
+            if (idx >= argsCount) {
+              slot = "local";
+              idx -= argsCount;
+            } else {
+              slot = "args";
+            }
             mth.append("  stackpos++;\n");
-            mth.append("  stack[stackpos].i64 = local[1].i64;\n");
+            mth.append("  stack[stackpos].i64 = " + slot + "[" + idx + "].i64;\n");
             mth.append("  stack[stackpos].type = 'J';\n");
             break;
           case 0x20:  //lload_2
+            idx = 2;
+            if (idx >= argsCount) {
+              slot = "local";
+              idx -= argsCount;
+            } else {
+              slot = "args";
+            }
             mth.append("  stackpos++;\n");
-            mth.append("  stack[stackpos].i64 = local[2].i64;\n");
+            mth.append("  stack[stackpos].i64 = " + slot + "[" + idx + "].i64;\n");
             mth.append("  stack[stackpos].type = 'J';\n");
             break;
           case 0x21:  //lload_3
+            idx = 3;
+            if (idx >= argsCount) {
+              slot = "local";
+              idx -= argsCount;
+            } else {
+              slot = "args";
+            }
             mth.append("  stackpos++;\n");
-            mth.append("  stack[stackpos].i64 = local[3].i64;\n");
+            mth.append("  stack[stackpos].i64 = " + slot + "[" + idx + "].i64;\n");
             mth.append("  stack[stackpos].type = 'J';\n");
             break;
           case 0x69:  //lmul
@@ -1645,7 +1841,13 @@ public class Compiler {
             } else {
               idx = readByte();
             }
-            mth.append("  idx == local[" + idx + "].i32;\n");
+            if (idx >= argsCount) {
+              slot = "local";
+              idx -= argsCount;
+            } else {
+              slot = "args";
+            }
+            mth.append("  idx = " + slot + "[" + idx + "].i32;\n");
             mth.append("  goto return_jsr;\n");
             break;
           case 0xb1:  //return void
@@ -1708,7 +1910,6 @@ public class Compiler {
       }
       postMethod(method);
       mth.append("}\n");  //end of function
-      addStack();
       mths.append(mth_pre.toString());
       mths.append(mth.toString());
     } catch (Exception e) {
@@ -1771,18 +1972,6 @@ public class Compiler {
     }
   }
 
-  private void addStack() {
-    int cnt = stackCount + xstackCount;
-    mth_pre.append("  Slot stack[" + cnt + "] = {");
-    for(int a=0;a<cnt;a++) {
-      if (a > 0) mth_pre.append(",");
-      mth_pre.append("{0,0}");
-    }
-    mth_pre.append("};\n");
-    mth_pre.append("  int stackpos = -1;\n");  //points to top/last item on stack
-    mth_pre.append("  int stacksize = " + cnt + ";\n");
-  }
-
   private void checkException(AttrCode code) {
     for(int a=0;a<code.exception_count;a++) {
       CodeException ce = code.exceptions[a];
@@ -1798,8 +1987,8 @@ public class Compiler {
         mth.append("#endif\n");
         mth.append("  jvm->ustack = (UStack*)&" + var + ";\n");
         mth.append("  if (setjmp(" + var + ".buf) != 0) {\n");
-        mth.append("    jfvm_release_stack(jvm, &stack, stacksize);\n");
-        mth.append("    stackpos = 0;\n");
+        mth.append("    jfvm_release_stack(jvm, &stack, " + stackCount + ");\n");
+        mth.append("    stackpos = -1;\n");
         mth.append("    stack[stackpos].obj = jvm->exception;\n");
         mth.append("    stack[stackpos].type = 'L';\n");
         mth.append("    jvm->exception = NULL;\n");
@@ -1818,12 +2007,29 @@ public class Compiler {
 
   private void preMethod(Method method) {
     //define local/spare fields
-    mth_pre.append("  Slot temp[3] = {{0,0},{0,0},{0,0}};\n");
+    mth.append("  Slot temp[3] = {{0,0},{0,0},{0,0}};\n");
     String returnType = method.getReturnCType();
     if (returnType != null) {
       mth.append("  char rtype;\n");  //good game
       mth.append("  " + returnType + " rval;\n");
     }
+    //define local vars
+    if (localCount > 0) {
+      mth.append("  Slot local[" + localCount + "] = {");
+      for(int a=0;a<localCount;a++) {
+        if (a > 0) mth.append(",");
+        mth.append("{0,0}");
+      }
+      mth.append("};\n");
+    }
+    //define stack
+    mth.append("  Slot stack[" + stackCount + "] = {");
+    for(int a=0;a<stackCount;a++) {
+      if (a > 0) mth.append(",");
+      mth.append("{0,0}");
+    }
+    mth.append("};\n");
+    mth.append("  int stackpos = -1;\n");
     //temp vars
     mth.append("  jint idx, len, val;\n");
     mth.append("  char type;\n");
@@ -1850,19 +2056,22 @@ public class Compiler {
     //unwind stack
 
     if (!isVoid) {
-      //move return value on stack to local[0]
+      //move return value on stack to local [0]
       mth.append("  rval = stack[stackpos]." + method.getReturnCName() + ";\n");
       mth.append("  rtype = stack[stackpos].type;\n");
       mth.append("  stack[stackpos].type = 0;\n");
     }
-    mth.append("  jfvm_release_stack(jvm, &local[0], " + localCount + ");\n");
-    mth.append("  jfvm_release_stack(jvm, &stack[0], " + (stackCount + xstackCount) + ");\n");
+    mth.append("  jfvm_release_stack(jvm, &args[0], " + argsCount + ");\n");
+    if (localCount > 0) {
+      mth.append("  jfvm_release_stack(jvm, &local[0], " + localCount + ");\n");
+    }
+    mth.append("  jfvm_release_stack(jvm, &stack[0], " + stackCount + ");\n");
     //in case exception was thrown mid-statement
     mth.append("  jfvm_release_stack(jvm, &temp[0], 3);\n");
     if (!isVoid) {
-      //move return value on stack to local[0]
-      mth.append("  local[0]." + method.getReturnCName() + " = rval;\n");
-      mth.append("  local[0].type = rtype;\n");
+      //move return value on stack to local [0]
+      mth.append("  args[0]." + method.getReturnCName() + " = rval;\n");
+      mth.append("  args[0].type = rtype;\n");
     }
     if (method.isSync) {
       mth.append("  jfvm_usync_remove(jvm);\n");
@@ -2027,30 +2236,59 @@ public class Compiler {
     mth.append("  }\n");
   }
 
-  public void remove(int idx) {
-    mth.append("  jfvm_arc_release(jvm, &local[0]);\n");
-    mth.append("  for(int a=1;a<=" + idx + ";a++) {\n");
-    mth.append("    local[a-1].i64 = local[a].i64;\n");
-    mth.append("    local[a-1].type = local[a].type;\n");
+  /** Removes the 'this' pointer from the args stack. */
+  public void remove(int cnt) {
+    mth.append("  jfvm_arc_release(jvm, &args[0]);\n");
+    mth.append("  for(int a=1;a<=" + cnt + ";a++) {\n");
+    mth.append("    args[a-1].i64 = args[a].i64;\n");
+    mth.append("    args[a-1].type = args[a].type;\n");
     mth.append("  }\n");
-    mth.append("  local[" + idx + "].type = 0;");
+    mth.append("  args[" + cnt + "].type = 0;");
   }
 
   //put work at locals <-> temps
 
   private void putInt(int lidx, int tidx) {
-    mth.append("  local[" + lidx + "].i32 = temp[" + tidx + "].i32;\n");
+    String slot;
+    if (lidx >= argsCount) {
+      slot = "local";
+      lidx -= argsCount;
+    } else {
+      slot = "args";
+    }
+    mth.append("  " + slot + "[" + lidx + "].i32 = temp[" + tidx + "].i32;\n");
   }
   private void putLong(int lidx, int tidx) {
-    mth.append("  local[" + lidx + "].i64 = temp[" + tidx + "].i64;\n");
+    String slot;
+    if (lidx >= argsCount) {
+      slot = "local";
+      lidx -= argsCount;
+    } else {
+      slot = "args";
+    }
+    mth.append("  " + slot + "[" + lidx + "].i64 = temp[" + tidx + "].i64;\n");
   }
   private void putObject(int lidx, int tidx) {
-    mth.append("  local[" + lidx + "].obj = temp[" + tidx + "].obj;\n");
+    String slot;
+    if (lidx >= argsCount) {
+      slot = "local";
+      lidx -= argsCount;
+    } else {
+      slot = "args";
+    }
+    mth.append("  " + slot + "[" + lidx + "].obj = temp[" + tidx + "].obj;\n");
     mth.append("  temp[" + tidx + "].type = 0;\n");
   }
   private void putAny(int lidx, int tidx) {
-    mth.append("  local[" + lidx + "].i64 = temp[" + tidx + "].i64;\n");
-    mth.append("  local[" + lidx + "].type = temp[" + tidx + "].type;\n");
+    String slot;
+    if (lidx >= argsCount) {
+      slot = "local";
+      lidx -= argsCount;
+    } else {
+      slot = "args";
+    }
+    mth.append("  " + slot + "[" + lidx + "].i64 = temp[" + tidx + "].i64;\n");
+    mth.append("  " + slot + "[" + lidx + "].type = temp[" + tidx + "].type;\n");
   }
 
   private String quoteString(String in) {
@@ -2093,22 +2331,22 @@ public class Compiler {
 
   private void object_init_vtable() {
     //fill in all method pointers in vtable
-    cls_pre.append("static void object_init_vtable(JVM *jvm, Slot *local) {\n");
+    cls_pre.append("static void object_init_vtable(JVM *jvm, Slot *args) {\n");
     //invoke object_init_vtable in super class
 //    if (jfvmc.debug) cls_pre.append("  printf(\"  vtable:%s\\n\"," + quoteString(cls.name) + ");\n");
-    cls_pre.append("  void (*init)(JVM *jvm, Slot *local);\n");
+    cls_pre.append("  void (*init)(JVM *jvm, Slot *args);\n");
     cls_pre.append("  Class *super = " + cls.cname + ".super_class;\n");
     cls_pre.append("  if (super != NULL) {\n");
     cls_pre.append("    init = super->init_vtable;\n");
-    cls_pre.append("    (*init)(jvm, local);\n");
+    cls_pre.append("    (*init)(jvm, args);\n");
     cls_pre.append("  }\n");
     int cnt = cls.MethodList.length;
     if (cnt == 0) {
       cls_pre.append("}\n");
       return;
     }
-    //this = local[0]
-    cls_pre.append("  void* vthis = (void*)local[0].obj;\n");
+    //this = args[0]
+    cls_pre.append("  void* vthis = (void*)args[0].obj;\n");
     cls_pre.append("  union { void** ithis;  char *cthis; } u;\n");
     for(int a=0;a<cnt;a++) {
       Method m = cls.MethodList[a];

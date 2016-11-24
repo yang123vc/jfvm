@@ -32,10 +32,9 @@ int jfvm_get_type_size(char type) {
 static volatile jboolean main_thread_started = J_FALSE;
 static Object* main_thread;
 static Object* destroyer_thread;
-static Slot* main_stack;
+static Slot main_stack[1] = {{0,0}};
 static Class* main_class;
 static int main_clsidx;
-static int main_local;
 static int main_return;
 
 static void jfvm_main_thread(JVM *jvm, Slot *local) {
@@ -46,6 +45,7 @@ static void jfvm_main_thread(JVM *jvm, Slot *local) {
 
 void jfvm_main(const char *lib_name[], void *lib_handle[], int lib_count, int argc, const char **argv, const char *clsname) {
   JVM *jvm;
+  Slot stack[1] = {{0,0}};
   jvm = jfvm_alloc(NULL, sizeof(JVM));
   UMethod* umethod = jfvm_alloc(jvm, sizeof(UMethod));
   umethod->type = UMethod_type;
@@ -65,8 +65,6 @@ void jfvm_main(const char *lib_name[], void *lib_handle[], int lib_count, int ar
   if (main_class == NULL) { printf("Error:Class not found:%s\n", clsname); jfvm_exit(1); };
   main_clsidx = jfvm_get_static_method_clsidx(jvm, main_class, "main([Ljava/lang/String;)I");
   if (main_clsidx == -1) { printf("Error:static void main(String []) not found!\n"); jfvm_exit(1); };
-  main_local = jfvm_get_static_method_local(jvm, main_class, main_clsidx);
-  main_stack = jfvm_stack_alloc(jvm, main_local);
 
   Object *main_args = jfvm_anewarray(jvm, "java/lang/String", argc-1);
   main_stack[0].obj = main_args;
@@ -79,21 +77,9 @@ void jfvm_main(const char *lib_name[], void *lib_handle[], int lib_count, int ar
   //create thread and call jfvm_main_thread(String cls)
   main_thread = jfvm_new(jvm, jfvm_find_class(jvm, "java/lang/Thread"));
   int runobjidx = jfvm_get_method_objidx(jvm, main_thread->cls, "run()V");
-  int runclsidx = jfvm_get_method_clsidx(jvm, main_thread->cls, "run()V");
-  int runlocal = jfvm_get_method_local(jvm, main_thread->cls, runclsidx);
   main_thread->methods[runobjidx] = &jfvm_main_thread;
   int startobjidx = jfvm_get_method_objidx(jvm, main_thread->cls, "start()V");
-  int startclsidx = jfvm_get_method_clsidx(jvm, main_thread->cls, "start()V");
-  int startlocal = jfvm_get_method_local(jvm, main_thread->cls, startclsidx);
   int joinobjidx = jfvm_get_method_objidx(jvm, main_thread->cls, "join()V");
-  int joinclsidx = jfvm_get_method_clsidx(jvm, main_thread->cls, "join()V");
-  int joinlocal = jfvm_get_method_local(jvm, main_thread->cls, joinclsidx);
-
-  int maxlocal = runlocal;
-  if (startlocal > maxlocal) maxlocal = startlocal;
-  if (joinlocal > maxlocal) maxlocal = joinlocal;
-  Slot *stack;
-  stack = jfvm_stack_alloc(jvm, maxlocal);
 
   jfvm_arc_inc(jvm, main_thread);
   stack[0].obj = main_thread;
@@ -126,34 +112,27 @@ void jfvm_init_destroyer_pre(JVM *jvm) {
 }
 
 void jfvm_init_destroyer_pst(JVM *jvm) {
-  Slot *stack;
+  Slot stack[1] = {{0,0}};
   destroyer_thread = jfvm_new(jvm, jfvm_find_class(jvm, "java/lang/Thread"));
   int runidx = jfvm_get_method_objidx(jvm, destroyer_thread->cls, "run()V");
   destroyer_thread->methods[runidx] = &jfvm_destroy_run;
   int startobjidx = jfvm_get_method_objidx(jvm, destroyer_thread->cls, "start()V");
-  int startclsidx = jfvm_get_method_clsidx(jvm, destroyer_thread->cls, "start()V");
   jfvm_arc_inc(jvm, destroyer_thread);
-  int local = jfvm_get_method_local(jvm, destroyer_thread->cls, startclsidx);
-  stack = jfvm_stack_alloc(jvm, local);
   stack[0].obj = destroyer_thread;
   stack[0].type = 'L';
   jfvm_invokevirtual(jvm, destroyer_thread->cls, startobjidx, stack);
 }
 
 void jfvm_destroy_run(JVM *jvm, Slot *local) {
-  Slot *stack;
+  Slot stack[1] = {{0,0}};
   Object *stop;
   Object *next;
   Class *thread = jfvm_find_class(jvm, "java/lang/Thread");
   Class *object = jfvm_find_class(jvm, "java/lang/Object");
   Class *throwable = jfvm_find_class(jvm, "java/lang/Throwable");
   int sleepclsidx = jfvm_get_static_method_clsidx(jvm, thread, "sleep(J)V");
-  int stacksize = jfvm_get_static_method_local(jvm, thread, sleepclsidx);
   int finalobjidx = jfvm_get_method_objidx(jvm, object, "finalize()V");
-  int finalclsidx = jfvm_get_method_clsidx(jvm, object, "finalize()V");
   UCatch ucatch = {.type = UCatch_type, .cls = throwable, .prev = NULL};
-  int localsize;
-  stack = jfvm_stack_alloc(jvm, stacksize);
   while (1) {
     stop = head;
     stack[0].i32 = 100;
@@ -173,11 +152,6 @@ void jfvm_destroy_run(JVM *jvm, Slot *local) {
           ucatch.prev = NULL;
           tail->reflck = 0;
           tail->refcnt = 2;  //finalize() will dec cnt - don't want it to re-add to destroyer list
-          localsize = jfvm_get_method_local(jvm, tail->cls, finalclsidx);
-          if (localsize > stacksize) {
-            stacksize = localsize;
-            stack = jfvm_stack_realloc(jvm, stack, stacksize);
-          }
           stack[0].obj = tail;
           stack[0].type = 'L';
           jfvm_invokevirtual(jvm, object, finalobjidx, stack);
