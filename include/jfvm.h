@@ -265,10 +265,11 @@ void jfvm_stack_free(JVM *jvm, void *stack);
 
 //init (do NOT call)
 void jfvm_init_pre(JVM *jvm);
-void jfvm_init_class(JVM *jvm);
+void jfvm_init_class_pre(JVM *jvm);
+void jfvm_init_destroyer_pre(JVM *jvm);
 
 void jfvm_init_pst(JVM *jvm);
-void jfvm_init_destroyer_pre(JVM *jvm);
+void jfvm_init_class_pst(JVM *jvm);
 void jfvm_init_destroyer_pst(JVM *jvm);
 
 //arc

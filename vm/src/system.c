@@ -3,12 +3,13 @@
 
 /** init pre classpath loading */
 void jfvm_init_pre(JVM *jvm) {
-  jfvm_init_class(jvm);
+  jfvm_init_class_pre(jvm);
   jfvm_init_destroyer_pre(jvm);
 }
 
 /** init post classpath loading */
 void jfvm_init_pst(JVM *jvm) {
+  jfvm_init_class_pst(jvm);
   jfvm_init_destroyer_pst(jvm);
 }
 

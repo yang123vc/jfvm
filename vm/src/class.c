@@ -6,8 +6,18 @@ static Class ***class_pool = NULL;
 static int class_pool_size = 0;
 static void *class_pool_mutex = NULL;
 
-void jfvm_init_class(JVM *jvm) {
+void jfvm_init_class_pre(JVM *jvm) {
   class_pool_mutex = jfvm_mutex_alloc();
+}
+
+static Class *class_throwable;
+static Class *class_string;
+static int method_string_init_clsidx;
+
+void jfvm_init_class_pst(JVM *jvm) {
+  class_throwable = jfvm_find_class(jvm, "java/lang/Throwable");
+  class_string = jfvm_find_class(jvm, "java/lang/String");
+  method_string_init_clsidx = jfvm_get_method_clsidx(jvm, class_string, "<init>([B)V");
 }
 
 /** Loads a DLL adds classes to classpath and returns DLL handle. */
@@ -81,7 +91,7 @@ Class *jfvm_find_class(JVM *jvm, const char *name) {
           clinit = cls->object_clinit;
           cls->object_clinit = NULL;
           //catch exceptions
-          UCatch *ucatch = jfvm_ucatch_alloc(jvm, jfvm_find_class(jvm, "java/lang/Throwable"));  //TODO : cache this
+          UCatch *ucatch = jfvm_ucatch_alloc(jvm, class_throwable);
           if (setjmp(ucatch->buf) == 0) {
             (*clinit)(jvm, stack);  //class static { ... }
           } else {
@@ -309,14 +319,12 @@ Object* jfvm_create_lambda(JVM *jvm, Class *cls, int objidx, void *method) {
 
 Object* jfvm_new_string(JVM *jvm, const char *str, int len) {
   int stackpos = -1;
-  Class *strcls = jfvm_find_class(jvm, "java/lang/String");  //TODO : cache this
   Object *strobj;
-  int clsidx = jfvm_get_method_clsidx(jvm, strcls, "<init>([B)V");  //TODO : cache this
   Slot *stack = jfvm_stack_alloc(jvm, 3);
 
   //new String()
   stackpos++;
-  stack[stackpos].obj = jfvm_new(jvm, strcls);
+  stack[stackpos].obj = jfvm_new(jvm, class_string);
   stack[stackpos].type = 'L';
   //dup
   stackpos++;
@@ -329,7 +337,7 @@ Object* jfvm_new_string(JVM *jvm, const char *str, int len) {
   stack[stackpos].type = 'L';
   memcpy(&stack[stackpos].obj->array->ai8[0],str,len);
   //String(byte[])
-  jfvm_invokespecial(jvm, strcls, clsidx, &stack[stackpos-1]);
+  jfvm_invokespecial(jvm, class_string, method_string_init_clsidx, &stack[stackpos-1]);
   stackpos -= 2;
   strobj = stack[stackpos].obj;
   jfvm_stack_free(jvm, stack);
