@@ -11,8 +11,11 @@ public class PrintStream {
     this.os = os;
   }
   public synchronized void println(String str) {
-    os.write(str.getBytes());
-    os.write("\n".getBytes());
+    try {
+      os.write(str.getBytes());
+      os.write("\n".getBytes());
+    } catch (Exception e) {
+    }
   }
   public void println(Object obj) {
     println(obj.toString());

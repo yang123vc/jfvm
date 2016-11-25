@@ -13,8 +13,10 @@ void jfvm_init_class_pre(JVM *jvm) {
 static Class *class_throwable;
 static Class *class_string;
 static int method_string_init_clsidx;
+static jboolean init_pst = J_FALSE;  //do NOT call static {} functions until all libraries are loaded
 
 void jfvm_init_class_pst(JVM *jvm) {
+  init_pst = J_TRUE;
   class_throwable = jfvm_find_class(jvm, "java/lang/Throwable");
   class_string = jfvm_find_class(jvm, "java/lang/String");
   method_string_init_clsidx = jfvm_get_method_clsidx(jvm, class_string, "<init>([B)V");
@@ -86,6 +88,7 @@ Class *jfvm_find_class(JVM *jvm, const char *name) {
     while (*classes != NULL) {
       Class* cls = *classes;
       if (strcmp(cls->name, name) == 0) {
+        if (!init_pst) return cls;
         while (!__atomic_test_and_set(&cls->object_clinit_reflck, __ATOMIC_SEQ_CST)) {};
         if (cls->object_clinit != NULL) {
           clinit = cls->object_clinit;

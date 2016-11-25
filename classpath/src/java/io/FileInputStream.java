@@ -8,13 +8,15 @@ package java.io;
 public class FileInputStream extends InputStream {
   private long handle;
 
-  public FileInputStream(String fn) throws Exception {
+  public FileInputStream(String fn) throws IOException {
     open(fn);
   }
 
-  public native void open(String fn) throws Exception;
-  public native void close();
+  public native void open(String fn) throws IOException;
+  public native void close() throws IOException;
 
-  public native int read();
-  public native int read(byte[] buf);
+  public native int read() throws IOException;
+  public native int read(byte[] buf, int off, int length) throws IOException;
+
+  public native int available() throws IOException;
 }

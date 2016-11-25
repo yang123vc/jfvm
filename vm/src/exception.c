@@ -58,7 +58,7 @@ void jfvm_throw_methodnotfound(JVM *jvm) {
 }
 
 void jfvm_throw_abstractmethodcalled(JVM *jvm) {
-  Object *obj = jfvm_new(jvm, jfvm_find_class(jvm, "java/lang/AbstractMethodInvokedException"));
+  Object *obj = jfvm_new(jvm, jfvm_find_class(jvm, "java/lang/AbstractMethodError"));
   //TODO : call ctor with string describing cause of exception
   jfvm_throw_exception(jvm, obj);
 }
@@ -127,7 +127,7 @@ void jfvm_ucatch_unwind(JVM *jvm) {
   if (ucatch->free) jfvm_free(jvm, ucatch);
 }
 
-void jfvm_release_stack(JVM *jvm, Slot *slots, int slotCount) {
+void jfvm_stack_release(JVM *jvm, Slot *slots, int slotCount) {
   for(int a=0;a<slotCount;a++) {
     if (slots[a].type == 'L') jfvm_arc_release(jvm, &slots[a]);
   }

@@ -145,6 +145,10 @@ struct Slot {
     jfloat f32;
     jdouble f64;
     void *v;
+    struct {
+      jint i32low;
+      jint i32high;
+    };
   };
 };
 
@@ -395,7 +399,7 @@ void jfvm_umethod_unwind(JVM *jvm);
 /** Frees a catch unwinding block. */
 void jfvm_ucatch_unwind(JVM *jvm);
 /** Releases all objects (decrement ref count) in a stack. */
-void jfvm_release_stack(JVM *jvm, Slot *stack, int stackCount);
+void jfvm_stack_release(JVM *jvm, Slot *stack, int stackCount);
 
 //object destroyer (and thread monitor too)
 void jfvm_destroy_run(JVM *jvm, Slot *local);

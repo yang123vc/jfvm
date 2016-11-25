@@ -1987,7 +1987,7 @@ public class Compiler {
         mth.append("#endif\n");
         mth.append("  jvm->ustack = (UStack*)&" + var + ";\n");
         mth.append("  if (setjmp(" + var + ".buf) != 0) {\n");
-        mth.append("    jfvm_release_stack(jvm, &stack, " + stackCount + ");\n");
+        mth.append("    jfvm_stack_release(jvm, &stack, " + stackCount + ");\n");
         mth.append("    stackpos = -1;\n");
         mth.append("    stack[stackpos].obj = jvm->exception;\n");
         mth.append("    stack[stackpos].type = 'L';\n");
@@ -2061,13 +2061,13 @@ public class Compiler {
       mth.append("  rtype = stack[stackpos].type;\n");
       mth.append("  stack[stackpos].type = 0;\n");
     }
-    mth.append("  jfvm_release_stack(jvm, &args[0], " + argsCount + ");\n");
+    mth.append("  jfvm_stack_release(jvm, &args[0], " + argsCount + ");\n");
     if (localCount > 0) {
-      mth.append("  jfvm_release_stack(jvm, &local[0], " + localCount + ");\n");
+      mth.append("  jfvm_stack_release(jvm, &local[0], " + localCount + ");\n");
     }
-    mth.append("  jfvm_release_stack(jvm, &stack[0], " + stackCount + ");\n");
+    mth.append("  jfvm_stack_release(jvm, &stack[0], " + stackCount + ");\n");
     //in case exception was thrown mid-statement
-    mth.append("  jfvm_release_stack(jvm, &temp[0], 3);\n");
+    mth.append("  jfvm_stack_release(jvm, &temp[0], 3);\n");
     if (!isVoid) {
       //move return value on stack to local [0]
       mth.append("  args[0]." + method.getReturnCName() + " = rval;\n");
