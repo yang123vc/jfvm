@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include <fcntl.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 #include <unistd.h>
 
 //input stream
@@ -96,7 +98,7 @@ void java_java_io_FileOutputStream_write_ABII(JVM *jvm, Slot *args) {
 void java_java_io_RandomAccessFile_open(JVM *jvm, Slot *args) {
   const char *str = jfvm_string_getbytes(jvm, args[1].obj);
   const char *mode = jfvm_string_getbytes(jvm, args[2].obj);
-  HANDLE handle;
+  int handle;
   if (strchr(mode, 'w') == NULL)
     handle = open(str, O_RDONLY);
   else
