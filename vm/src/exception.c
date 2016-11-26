@@ -5,6 +5,7 @@ void jfvm_throw_exception(JVM *jvm, Object *exception) {
   UCatch *ucatch;
   USync *usync;
   jvm->exception = exception;
+  jfvm_arc_inc(jvm, exception);
   do {
     switch (jvm->ustack->type) {
       case UMethod_type:
@@ -18,7 +19,7 @@ void jfvm_throw_exception(JVM *jvm, Object *exception) {
         jvm->ustack = jvm->ustack->prev;
         if (jfvm_instanceof_class(jvm, ucatch->cls->name, exception->cls)) {
 //          printf("  throw:found matching catch\n");
-          longjmp(ucatch->buf, 1);  //handler will place onto empty stack
+          longjmp(ucatch->buf, 1);  //handler will place exception onto empty stack
         }
         if (ucatch->free) jfvm_free(jvm, ucatch);
         break;

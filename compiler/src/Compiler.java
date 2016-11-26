@@ -1988,7 +1988,7 @@ public class Compiler {
         mth.append("  jvm->ustack = (UStack*)&" + var + ";\n");
         mth.append("  if (setjmp(" + var + ".buf) != 0) {\n");
         mth.append("    jfvm_stack_release(jvm, &stack, " + stackCount + ");\n");
-        mth.append("    stackpos = -1;\n");
+        mth.append("    stackpos = 0;\n");
         mth.append("    stack[stackpos].obj = jvm->exception;\n");
         mth.append("    stack[stackpos].type = 'L';\n");
         mth.append("    jvm->exception = NULL;\n");
