@@ -5,7 +5,6 @@ void jfvm_throw_exception(JVM *jvm, Object *exception) {
   UCatch *ucatch;
   USync *usync;
   jvm->exception = exception;
-  jfvm_arc_inc(jvm, exception);
   do {
     switch (jvm->ustack->type) {
       case UMethod_type:
