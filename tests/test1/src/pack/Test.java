@@ -1,5 +1,7 @@
 package pack;
 
+import java.lang.reflect.Array;
+
 class Test {
   public int x;
   public Test() {
@@ -13,6 +15,7 @@ class Test {
     t.testLambda1();
     t.testLambda2();
     t.testExceptions();
+    t.testReflection();
     t.testThreads();
     return 0;
   }
@@ -89,5 +92,12 @@ class Test {
         }
       }
     }
+  }
+
+  public void testReflection() {
+    int i1[] = new int[100];
+    Class ci = i1.getClass();
+    int i2[] = (int[])Array.newInstance(ci, 200);
+    System.out.println("length=" + i2.length);
   }
 }

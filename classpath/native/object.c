@@ -2,8 +2,8 @@
 
 //java.lang.Object methods
 
-void java_java_lang_Object_clone(JVM *jvm, Slot *local) {
-  Object *obj = local[0].obj;
+void java_java_lang_Object_clone(JVM *jvm, Slot *args) {
+  Object *obj = args[0].obj;
   Class *cls = obj->cls;
   int size = sizeof(Object) + cls->size * sizeof(void*);
   Object *cln = jfvm_alloc(jvm, size);
@@ -43,46 +43,61 @@ void java_java_lang_Object_clone(JVM *jvm, Slot *local) {
       cls = cls->super_class;
     } while (cls != NULL);
   }
-  jfvm_arc_release(jvm, &local[0]);
-  local[0].obj = cln;
-  local[0].type = 'L';
+  jfvm_arc_release(jvm, &args[0]);
+  args[0].obj = cln;
+  args[0].type = 'L';
 }
 
-void java_java_lang_Object_getClass(JVM *jvm, Slot *local) {
-  //create Class object
+static Object* getClass(JVM *jvm, Object *obj) {
+  Class *cls = obj->cls;
   Object *clsobj = jfvm_new(jvm, jfvm_find_class(jvm, "java/lang/Class"));
-  clsobj->defcls = local[0].obj->cls;
-  jfvm_arc_release(jvm, &local[0]);
-  local[0].obj = clsobj;
-  local[0].type = 'L';
+  clsobj->defcls = cls;
+  jfvm_set_object(jvm, clsobj, "name", jfvm_new_string(jvm, cls->name, strlen(cls->name)));
+  return clsobj;
 }
 
-int java_java_lang_Object_hashCode(JVM *jvm, Slot *local) {
+void java_java_lang_Object_getClass(JVM *jvm, Slot *args) {
+  //create Class object
+  char type = args[0].obj->type;
+  int isArray = type != 'L';
+  Object *clsobj = getClass(jvm, args[0].obj);
+  if (isArray) {
+    jfvm_set_field(jvm, clsobj, "isArray", &isArray, 1);
+    Object *ct = getClass(jvm, args[0].obj);
+    jfvm_set_object(jvm, clsobj, "componentType", ct);
+    jfvm_set_field(jvm, clsobj, "arrayType", &type, 1);
+  }
+  jfvm_arc_release(jvm, &args[0]);
+  args[0].obj = clsobj;
+  args[0].type = 'L';
+}
+
+int java_java_lang_Object_hashCode(JVM *jvm, Slot *args) {
   union {
     int i;
     void *v;
   } u;
-  u.v = local[0].obj;
-  jfvm_arc_release(jvm, &local[0]);
+  u.v = args[0].obj;
+  jfvm_arc_release(jvm, &args[0]);
   return u.i;
 }
 
-void java_java_lang_Object_wait_JI(JVM *jvm, Slot *local) {
-  //local[0].i64 = ms
-  //local[1].i32 = ns (not used)
-  Object *obj = local[0].obj;
-  jfvm_cond_wait(obj->locks->cond, obj->locks->mutex, local[1].i64);
-  jfvm_arc_release(jvm, &local[0]);
+void java_java_lang_Object_wait_JI(JVM *jvm, Slot *args) {
+  //args[0].i64 = ms
+  //args[1].i32 = ns (not used)
+  Object *obj = args[0].obj;
+  jfvm_cond_wait(obj->locks->cond, obj->locks->mutex, args[1].i64);
+  jfvm_arc_release(jvm, &args[0]);
 }
 
-void java_java_lang_Object_notify(JVM *jvm, Slot *local) {
-  Object *obj = local[0].obj;
+void java_java_lang_Object_notify(JVM *jvm, Slot *args) {
+  Object *obj = args[0].obj;
   jfvm_cond_notify(obj->locks->cond);
-  jfvm_arc_release(jvm, &local[0]);
+  jfvm_arc_release(jvm, &args[0]);
 }
 
-void java_java_lang_Object_notifyAll(JVM *jvm, Slot *local) {
-  Object *obj = local[0].obj;
+void java_java_lang_Object_notifyAll(JVM *jvm, Slot *args) {
+  Object *obj = args[0].obj;
   jfvm_cond_notifyAll(obj->locks->cond);
-  jfvm_arc_release(jvm, &local[0]);
+  jfvm_arc_release(jvm, &args[0]);
 }

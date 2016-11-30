@@ -35,4 +35,30 @@ public class String {
     }
     return ba;
   }
+  public int indexOf(char ch) {
+    int cnt = value.length;
+    for(int i=0;i<cnt;i++) {
+      if (value[i] == ch) return i;
+    }
+    return -1;
+  }
+  public int lastIndexOf(char ch) {
+    for(int i=value.length-1;i>=0;i--) {
+      if (value[i] == ch) return i;
+    }
+    return -1;
+  }
+  public String substring(int sidx) {
+    int length = value.length - sidx;
+    char array[] = new char[length];
+    System.arraycopy(value, sidx, array, 0, length);
+    return new String(array);
+  }
+  public String substring(int sidx, int eidx) {
+    int length = eidx - sidx;
+    if (length == -1) return null;
+    char array[] = new char[length];
+    System.arraycopy(value, sidx, array, 0, length);
+    return new String(array);
+  }
 }

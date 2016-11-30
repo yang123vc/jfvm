@@ -11,7 +11,7 @@ The Object Destroyer thread does this by queuing all objects to be deleted ensur
 In order to get/set Objects in native code you must do so with special getters and setters to maintain reference counting.
 At the end of every function all Objects must be 'released' except for the return value.
 
-jfvm_release_stack() can be used to release an array of Slot's
+jfvm_stack_release() can be used to release an array of Slot's
 jfvm_arc_inc() can increment a reference count
 jfvm_arc_dec() can decrement a reference count
 

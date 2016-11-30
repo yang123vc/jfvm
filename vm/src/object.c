@@ -194,14 +194,40 @@ int jfvm_read_handle_int(JVM *jvm, Object *obj) {
   return obj->ifields[fidx];
 }
 
-//these are NOT ARC safe.  Use only for objects that are not shared yet (ie: building a new object that is not returned yet)
+//these are NOT ARC safe.  Use only in constructors.
 
 Object* jfvm_get_object(JVM *jvm, Object *obj, const char *field) {
   int fidx = jfvm_get_field_objidx(jvm, obj->cls, field);
+  if (fidx == -1) {
+    printf("Error:field not found:%s\n", field);
+    return NULL;
+  }
   return (Object*)obj->fields[fidx];
 }
 
 void jfvm_set_object(JVM *jvm, Object *obj, const char *field, Object *value) {
   int fidx = jfvm_get_field_objidx(jvm, obj->cls, field);
+  if (fidx == -1) {
+    printf("Error:field not found:%s\n", field);
+    return;
+  }
   obj->fields[fidx] = value;
+}
+
+void jfvm_get_field(JVM *jvm, Object *obj, const char *field, void *value, int size) {
+  int fidx = jfvm_get_field_objidx(jvm, obj->cls, field);
+  if (fidx == -1) {
+    printf("Error:field not found:%s\n", field);
+    return;
+  }
+  memcpy(value, &obj->fields[fidx], size);
+}
+
+void jfvm_set_field(JVM *jvm, Object *obj, const char *field, void *value, int size) {
+  int fidx = jfvm_get_field_objidx(jvm, obj->cls, field);
+  if (fidx == -1) {
+    printf("Error:field not found:%s\n", field);
+    return;
+  }
+  memcpy(&obj->fields[fidx], value, size);
 }

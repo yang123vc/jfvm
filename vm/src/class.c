@@ -274,11 +274,11 @@ int jfvm_get_method_objidx(JVM *jvm, Class *cls, const char *name_desc) {
   return -1;
 }
 
-int jfvm_get_static_field_clsidx(JVM *jvm, Class *cls, const char *name_desc) {
+int jfvm_get_static_field_clsidx(JVM *jvm, Class *cls, const char *name) {
   Field *field = cls->static_fields;
   int idx = 0;
   while (field->name != NULL) {
-    if (strcmp(field->name_desc, name_desc) == 0) {
+    if (strcmp(field->name, name) == 0) {
       return idx;
     }
     idx++;
@@ -287,12 +287,12 @@ int jfvm_get_static_field_clsidx(JVM *jvm, Class *cls, const char *name_desc) {
   return -1;
 }
 
-int jfvm_get_field_objidx(JVM *jvm, Class *cls, const char *name_desc) {
+int jfvm_get_field_objidx(JVM *jvm, Class *cls, const char *name) {
   Field *field;
   do {
     field = cls->fields;
     while (field->name != NULL) {
-      if (strcmp(field->name_desc, name_desc) == 0) {
+      if (strcmp(field->name, name) == 0) {
         return field->offset;
       }
       field++;

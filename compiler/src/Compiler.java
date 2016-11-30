@@ -208,7 +208,7 @@ public class Compiler {
       cls_pre.append(", .object_clinit_reflck = 0\n");
       cls_pre.append("};\n");
     } catch (Exception e) {
-      e.printStackTrace();
+      System.out.println(e.toString());
     }
   }
 
@@ -272,7 +272,7 @@ public class Compiler {
         checkException(code);
         opc = pc;
         //read java byte code
-        int bytecode = readByte();
+        int bytecode = readByte() & 0xff;
         if (bytecode >= mnemonics.length) {
           mth.append("// 0x" + Integer.toString(bytecode, 16) + ": Unknown\n");
           System.out.println("Error:Unknown bytecode:ox" + Integer.toString(bytecode, 16));
@@ -386,7 +386,7 @@ public class Compiler {
             idx = readShort();  //object name
             popInt(0);  //count
             mth.append("  stackpos++;\n");
-            mth.append("  stack[stackpos] = jfvm_anewarray(jvm, " + quoteString(cls.getConstString(idx)) + ", temp[0].i32);\n");
+            mth.append("  stack[stackpos].obj = jfvm_anewarray(jvm, " + quoteString(cls.getConstString(idx)) + ", temp[0].i32);\n");
             mth.append("  stack[stackpos].type = 'L';\n");
             break;
           case 0xb0:  //areturn
@@ -542,18 +542,18 @@ public class Compiler {
                   scls = "java/lang/Object";
                 }
                 xcls = clspool.getClass(scls);
-                mth.append("  jfvm_checkcast_class(jvm," + addClass(xcls.name) + ",stack[stackpos]);\n");
+                mth.append("  jfvm_checkcast_class(jvm," + addClass(xcls.name) + ",&stack[stackpos]);\n");
               } else if (constRef instanceof ConstInterfaceRef) {
                 ifaceRef = (ConstInterfaceRef)cls.ConstList[idx];
                 scls = cls.getConstString(ifaceRef.cls_idx);
                 xcls = clspool.getClass(scls);
-                mth.append("  jfvm_checkcast_interface(jvm," + addClass(xcls.name) + ",stack[stackpos]);\n");
+                mth.append("  jfvm_checkcast_interface(jvm," + addClass(xcls.name) + ",&stack[stackpos]);\n");
               } else {
                 //must be array type
                 classRef = (ConstClass)cls.ConstList[idx];
                 scls = cls.getConstString(classRef.idx);
                 xcls = clspool.getClass(scls);
-                mth.append("  jfvm_checkcast_array(jvm," + addClass(xcls.name) + ",stack[stackpos]);\n");
+                mth.append("  jfvm_checkcast_array(jvm," + addClass(xcls.name) + ",&stack[stackpos]);\n");
               }
             mth.append("}\n");
             break;
@@ -1039,9 +1039,6 @@ public class Compiler {
             break;
           case 0xa7:  //goto
             idx = readShort();  //signed offset
-            if (idx >= 32768) {
-              idx |= 0xffff0000;  //convert to signed
-            }
             mth.append("  goto pc_" + (opc+idx) + ";\n");
             break;
           case 0xc8:  //goto_w
@@ -1453,11 +1450,11 @@ public class Compiler {
             break;
           case 0x78:  //ishl
             popInt(0);
-            mth.append("  stack[stackpos].i32 <<= temp[0].i8\n");
+            mth.append("  stack[stackpos].i32 <<= temp[0].i8;\n");
             break;
           case 0x7a:  //ishr
             popInt(0);
-            mth.append("  stack[stackpos].i32 >>= temp[0].i8\n");
+            mth.append("  stack[stackpos].i32 >>= temp[0].i8;\n");
             break;
           case 0x36:  //istore
             if (wide) {
@@ -1490,7 +1487,7 @@ public class Compiler {
             break;
           case 0x7c:  //iushr
             popInt(0);
-            mth.append("  stack[stackpos].u32 >>= temp[0].i8\n");
+            mth.append("  stack[stackpos].u32 >>= temp[0].i8;\n");
             break;
           case 0x82:  //ixor
             mth.append("  stack[stackpos-1].i32 ^= stack[stackpos].i32;\n");
@@ -1713,11 +1710,11 @@ public class Compiler {
             break;
           case 0x79:  //lshl
             popInt(0);
-            mth.append("  stack[stackpos].i64 <<= temp[0].i8\n");
+            mth.append("  stack[stackpos].i64 <<= temp[0].i8;\n");
             break;
           case 0x7b:  //lshr
             popInt(0);
-            mth.append("  stack[stackpos].i64 >>= temp[0].i8\n");
+            mth.append("  stack[stackpos].i64 >>= temp[0].i8;\n");
             break;
           case 0x37:  //lstore
             if (wide) {
@@ -1750,7 +1747,7 @@ public class Compiler {
             break;
           case 0x7d:  //lushr
             popInt(0);
-            mth.append("  stack[stackpos].u64 >>= temp[0].i8\n");
+            mth.append("  stack[stackpos].u64 >>= temp[0].i8;\n");
             break;
           case 0x83:  //lxor
             mth.append("  stack[stackpos-1].i64 ^= stack[stackpos].i64;\n");
@@ -1913,7 +1910,8 @@ public class Compiler {
       mths.append(mth_pre.toString());
       mths.append(mth.toString());
     } catch (Exception e) {
-      e.printStackTrace();
+//      e.printStackTrace();
+      System.out.println(e.toString());
     }
   }
 
@@ -1940,21 +1938,21 @@ public class Compiler {
     return "?";
   }
 
-  private int readByte() {
+  private int readByte() throws Exception {
     pc++;
-    return in.read();
+    return dis.readByte();
   }
 
   private int readShort() throws Exception {
     pc += 2;
-    return dis.readShort() & 0xffff;  //need unsigned operations
+    return dis.readShort();
   }
 
   private int readInt() throws Exception {
     pc += 4;
     return dis.readInt();
   }
-
+/*
   private long readLong() throws Exception {
     pc += 8;
     return dis.readLong();
@@ -1964,7 +1962,7 @@ public class Compiler {
     pc += 4;
     return dis.readFloat();
   }
-
+*/
   private void addExceptions(AttrCode code) {
     for(int a=0;a<code.exception_count;a++) {
 //      CodeException ce = code.exceptions[a];

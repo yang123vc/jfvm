@@ -27,5 +27,8 @@ public class System {
   private static native OutputStream getStdOut();
   private static native OutputStream getStdErr();
 
+  /** Copies an array. */
   public static native void arraycopy(Object src, int srcPos, Object dest, int destPos, int length);
+  /** Copies an array in reverse order. */
+  public static native void rarraycopy(Object src, int srcPos, Object dest, int destPos, int length);
 }

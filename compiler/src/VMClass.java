@@ -205,6 +205,7 @@ public class VMClass {
     int cnt = MethodList.length;
     for(int a=0;a<cnt;a++) {
       Method method = MethodList[a];
+//      System.out.println("compare:" + name + "." + method.name_desc);
       if (method.name_desc.equals(name_desc)) {
         return method;
       }
@@ -221,6 +222,7 @@ public class VMClass {
     return null;
   }
   public Method getMethod(String name_desc) throws Exception {
+//    System.out.println("getMethod:" + name_desc);
     return getMethod(name_desc, true);
   }
 

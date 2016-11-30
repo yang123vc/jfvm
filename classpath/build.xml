@@ -35,6 +35,7 @@
         <arg value="native/thread.c"/>
         <arg value="native/system.c"/>
         <arg value="native/file.c"/>
+        <arg value="native/array.c"/>
       </java>
     </sequential>
   </macrodef>

@@ -1,6 +1,6 @@
 package java.lang;
 
-/**
+/** NullPointerException
  *
  * @author pquiring
  */

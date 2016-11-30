@@ -139,7 +139,7 @@ void jfvm_destroy_run(JVM *jvm, Slot *local) {
     stack[0].i32 = 100;
     stack[0].type = 'I';
     jfvm_invokestatic(jvm, thread, sleepclsidx, stack);  //sleep 100ms
-#ifdef JFVM_DEBUG_DETROYER
+#ifdef JFVM_DEBUG_DESTROYER
     printf("deleting start\n");
 #endif
     while (tail != stop) {
@@ -168,7 +168,7 @@ void jfvm_destroy_run(JVM *jvm, Slot *local) {
       }
       tail = next;
     }
-#ifdef JFVM_DEBUG_DETROYER
+#ifdef JFVM_DEBUG_DESTROYER
     printf("deleting done\n");
 #endif
     if (main_thread_started == J_TRUE && threads == 1) {
@@ -184,8 +184,10 @@ void jfvm_destroy_add(JVM *jvm, Object *obj) {
   jfvm_mutex_unlock(destroy_mutex);
 }
 
+int once = 1;
+
 void jfvm_destroy_obj(JVM *jvm, Object *obj) {
-#ifdef JFVM_DEBUG_OBJECT
+#ifdef JFVM_DEBUG_DESTROYER
   printf(" destroy:%p:%s\n", obj, obj->cls->name);
 #endif
   Class *cls = obj->cls;
