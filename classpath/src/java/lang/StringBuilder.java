@@ -21,6 +21,10 @@ public class StringBuilder {
     return this;
   }
 
+  public StringBuilder append(Object obj) {
+    return append(obj.toString());
+  }
+
   public StringBuilder append(char ch) {
     char newvalue[] = new char[value.length + 1];
     System.arraycopy(value, 0, newvalue, 0, value.length);

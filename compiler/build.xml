@@ -26,9 +26,56 @@
     </jar>
   </target>
 
+  <macrodef name="build">
+    <attribute name="bits"/>
+    <attribute name="name"/>
+    <attribute name="libext"/>
+    <attribute name="exeext"/>
+    <sequential>
+      <exec command="java -jar ../bin/jfvmc.jar --@{bits} -g ../bin/jfvmc.jar --cp ../lib/jfvm.jar --out jfvmc@{libext}"/>
+      <copy file="../lib/classpath-@{name}@{bits}@{libext}" todir="."/>
+      <copy file="../lib/jfvm-@{name}@{bits}@{libext}" todir="."/>
+      <exec command="java -jar ../bin/jfvml.jar --@{bits} -g classpath-@{name}@{bits} jfvmc --main jfvmc --out jfvmc@{exeext}"/>
+
+      <exec command="java -jar ../bin/jfvmc.jar --@{bits} -g ../bin/jfvml.jar --cp ../lib/jfvm.jar --out jfvml@{libext}"/>
+      <copy file="../lib/classpath-@{name}@{bits}@{libext}" todir="."/>
+      <copy file="../lib/jfvm-@{name}@{bits}@{libext}" todir="."/>
+      <exec command="java -jar ../bin/jfvml.jar --@{bits} -g classpath-@{name}@{bits} jfvml --main jfvml --out jfvml@{exeext}"/>
+    </sequential>
+  </macrodef>
+
+  <target name="win32" depends="jar">
+    <copy file="../lib/jfvm-win32.dll.a" todir="."/>
+    <build bits="32" name="win" libext=".dll" exeext=".exe"/>
+  </target>
+
+  <target name="win64" depends="jar">
+    <copy file="../lib/jfvm-win64.dll.a" todir="."/>
+    <build bits="64" name="win" libext=".dll" exeext=".exe"/>
+  </target>
+
+  <target name="lnx32" depends="jar">
+    <build bits="32" name="lnx" libext=".so" exeext=""/>
+    <exec command="chmod +x test"/>
+  </target>
+
+  <target name="lnx64" depends="jar">
+    <build bits="64" name="lnx" libext=".so" exeext=""/>
+    <exec command="chmod +x test"/>
+  </target>
+
   <target name="clean" description="deletes compiled files">
     <delete>
-      <fileset dir="." includes="**/*.class"/>
+      <fileset dir="${build}" includes="**/*.class"/>
+      <fileset dir="oes" includes="**/*.o"/>
+      <fileset dir="ces" includes="**/*.c"/>
     </delete>
+  </target>
+
+  <target name="help">
+    <echo>ant win32  // build Windows 32 library</echo>
+    <echo>ant win64  // build Windows 64 library</echo>
+    <echo>ant lnx32  // build Linux 32 library</echo>
+    <echo>ant lnx64  // build Linux 64 library</echo>
   </target>
 </project>

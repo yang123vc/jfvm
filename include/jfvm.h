@@ -346,13 +346,13 @@ void jfvm_write_handle_int(JVM *jvm, Object *obj, int data);
 /** Reads data from 'handle' field of obj. (convenience method) */
 int jfvm_read_handle_int(JVM *jvm, Object *obj);
 
-/** Returns Object field. Not ARC safe.  Use only in constructor. */
+/** Returns Object field. Not ARC safe.  Use only in constructor. For ARC safe version use jfvm_getfield() */
 Object* jfvm_get_object(JVM *jvm, Object *obj, const char *field);
-/** Sets Object field. Not ARC safe.  Use only in constructor. */
+/** Sets Object field. Not ARC safe.  Use only in constructor. For ARC safe version use jfvm_putfield() */
 void jfvm_set_object(JVM *jvm, Object *obj, const char *field, Object *value);
-/** Returns ptr to primitive field. Not ARC safe.  Use only in constructor. */
+/** Returns ptr to primitive field. Do not use on Objects (not ARC safe). */
 void jfvm_get_field(JVM *jvm, Object *obj, const char *field, void *value, int size);
-/** Sets primitive field. Not ARC safe.  Use only in constructor. */
+/** Sets primitive field. Do not use on Objects (not ARC safe). */
 void jfvm_set_field(JVM *jvm, Object *obj, const char *field, void *value, int size);
 
 //class

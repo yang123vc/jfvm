@@ -36,6 +36,7 @@
         <arg value="native/system.c"/>
         <arg value="native/file.c"/>
         <arg value="native/array.c"/>
+        <arg value="native/lang.c"/>
       </java>
     </sequential>
   </macrodef>

@@ -44,4 +44,7 @@ public class Double {
     }
     return new String(ch, 0, chs);
   }
+
+  public native static double longBitsToDouble(long bits);
+
 }

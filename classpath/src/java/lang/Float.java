@@ -45,4 +45,5 @@ public class Float {
     return new String(ch, 0, chs);
   }
 
+  public native static float intBitsToFloat(int bits);
 }

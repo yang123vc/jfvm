@@ -21,6 +21,10 @@ public class StringBuffer {
     return this;
   }
 
+  public StringBuffer append(Object obj) {
+    return append(obj.toString());
+  }
+
   public StringBuffer append(char ch) {
     char newvalue[] = new char[value.length + 1];
     System.arraycopy(value, 0, newvalue, 0, value.length);

@@ -208,7 +208,7 @@ public class Compiler {
       cls_pre.append(", .object_clinit_reflck = 0\n");
       cls_pre.append("};\n");
     } catch (Exception e) {
-      System.out.println(e.toString());
+      e.printStackTrace(System.out);
     }
   }
 
@@ -314,9 +314,9 @@ public class Compiler {
             break;
           case 0x19:  //aload
             if (wide) {
-              idx = readShort();
+              idx = readShort() & 0xff;
             } else {
-              idx = readByte();
+              idx = readByte() & 0xffff;
             }
             if (idx >= argsCount) {
               slot = "local";
@@ -383,7 +383,7 @@ public class Compiler {
             break;
           case 0xbd:  //anewarray
             //count -> arrayref
-            idx = readShort();  //object name
+            idx = readShort() & 0xffff;  //object name
             popInt(0);  //count
             mth.append("  stackpos++;\n");
             mth.append("  stack[stackpos].obj = jfvm_anewarray(jvm, " + quoteString(cls.getConstString(idx)) + ", temp[0].i32);\n");
@@ -403,9 +403,9 @@ public class Compiler {
           case 0x3a:  //astore
             //objectref -> local [idx]
             if (wide) {
-              idx = readShort();
+              idx = readShort() & 0xffff;
             } else {
-              idx = readByte();
+              idx = readByte() & 0xff;
             }
             if (idx >= argsCount) {
               slot = "local";
@@ -528,7 +528,7 @@ public class Compiler {
             break;
           case 0xc0:  //checkcast
             //objref (obj S) -> objref
-            idx = readShort();  //-> ConstClass, Array, or ConstInterfaceRef (type T)
+            idx = readShort() & 0xffff;  //-> ConstClass, Array, or ConstInterfaceRef (type T)
             //throw exception ClassCastException if S is NOT of type T
             //ignore if S is null (do NOT throw NPE)
             //do not change the stack
@@ -625,9 +625,9 @@ public class Compiler {
             break;
           case 0x18:  //dload
             if (wide) {
-              idx = readShort();
+              idx = readShort() & 0xffff;
             } else {
-              idx = readByte();
+              idx = readByte() & 0xff;
             }
             if (idx >= argsCount) {
               slot = "local";
@@ -704,9 +704,9 @@ public class Compiler {
             break;
           case 0x39:  //dstore
             if (wide) {
-              idx = readShort();
+              idx = readShort() & 0xffff;
             } else {
-              idx = readByte();
+              idx = readByte() & 0xff;
             }
             popAny(0);
             putAny(idx, 0);
@@ -905,9 +905,9 @@ public class Compiler {
             break;
           case 0x17:  //fload
             if (wide) {
-              idx = readShort();
+              idx = readShort() & 0xffff;
             } else {
-              idx = readByte();
+              idx = readByte() & 0xff;
             }
             if (idx >= argsCount) {
               slot = "local";
@@ -984,9 +984,9 @@ public class Compiler {
             break;
           case 0x38:  //fstore
             if (wide) {
-              idx = readShort();
+              idx = readShort() & 0xffff;
             } else {
-              idx = readByte();
+              idx = readByte() & 0xff;
             }
             popAny(0);
             putAny(idx, 0);
@@ -1013,7 +1013,7 @@ public class Compiler {
             break;
           case 0xb4:  //getfield
             //objectref -> value
-            idx = readShort();
+            idx = readShort() & 0xffff;
             fieldRef = (ConstFieldRef)cls.ConstList[idx];
             scls = cls.getConstString(fieldRef.cls_idx);
             sfield = cls.getConstName(fieldRef.name_type_idx);
@@ -1027,7 +1027,7 @@ public class Compiler {
             break;
           case 0xb2:  //getstatic
             // -> value
-            idx = readShort();
+            idx = readShort() & 0xffff;
             fieldRef = (ConstFieldRef)cls.ConstList[idx];
             scls = cls.getConstString(fieldRef.cls_idx);
             sfield = cls.getConstName(fieldRef.name_type_idx);
@@ -1116,7 +1116,7 @@ public class Compiler {
             mth.append("  stackpos--;\n");
             break;
           case 0xa5:  //if_acmpeq
-            idx = readShort();
+            idx = readShort();  //signed offset
             popObject(0);
             popObject(1);
             //NOTE : jfvm_arc_release() is called first so it must not change .obj
@@ -1127,7 +1127,7 @@ public class Compiler {
             mth.append("  }\n");
             break;
           case 0xa6:  //if_acmpne
-            idx = readShort();
+            idx = readShort();  //signed offset
             popObject(0);
             popObject(1);
             //NOTE : jfvm_arc_release() is called first so it must not change .obj
@@ -1138,7 +1138,7 @@ public class Compiler {
             mth.append("  }\n");
             break;
           case 0x9f:  //if_icmpeq
-            idx = readShort();
+            idx = readShort();  //signed offset
             popInt(1);
             popInt(0);
             mth.append("  if (temp[0].i32 == temp[1].i32) {\n");
@@ -1146,7 +1146,7 @@ public class Compiler {
             mth.append("  }\n");
             break;
           case 0xa2:  //if_icmpge
-            idx = readShort();
+            idx = readShort();  //signed offset
             popInt(1);
             popInt(0);
             mth.append("  if (temp[0].i32 >= temp[1].i32) {\n");
@@ -1154,7 +1154,7 @@ public class Compiler {
             mth.append("  }\n");
             break;
           case 0xa3:  //if_icmpgt
-            idx = readShort();
+            idx = readShort();  //signed offset
             popInt(1);
             popInt(0);
             mth.append("  if (temp[0].i32 > temp[1].i32) {\n");
@@ -1162,7 +1162,7 @@ public class Compiler {
             mth.append("  }\n");
             break;
           case 0xa4:  //if_icmple
-            idx = readShort();
+            idx = readShort();  //signed offset
             popInt(1);
             popInt(0);
             mth.append("  if (temp[0].i32 <= temp[1].i32) {\n");
@@ -1170,7 +1170,7 @@ public class Compiler {
             mth.append("  }\n");
             break;
           case 0xa1:  //if_icmplt
-            idx = readShort();
+            idx = readShort();  //signed offset
             popInt(1);
             popInt(0);
             mth.append("  if (temp[0].i32 < temp[1].i32) {\n");
@@ -1178,7 +1178,7 @@ public class Compiler {
             mth.append("  }\n");
             break;
           case 0xa0:  //if_icmpne
-            idx = readShort();
+            idx = readShort();  //signed offset
             popInt(1);
             popInt(0);
             mth.append("  if (temp[0].i32 != temp[1].i32) {\n");
@@ -1186,49 +1186,49 @@ public class Compiler {
             mth.append("  }\n");
             break;
           case 0x99:  //ifeq
-            idx = readShort();
+            idx = readShort();  //signed offset
             popInt(0);
             mth.append("  if (temp[0].i32 == 0) {\n");
             mth.append("    goto " + "pc_" + (opc+idx) + ";\n");
             mth.append("  }\n");
             break;
           case 0x9c:  //ifge
-            idx = readShort();
+            idx = readShort();  //signed offset
             popInt(0);
             mth.append("  if (temp[0].i32 >= 0) {\n");
             mth.append("    goto " + "pc_" + (opc+idx) + ";\n");
             mth.append("  }\n");
             break;
           case 0x9d:  //ifgt
-            idx = readShort();
+            idx = readShort();  //signed offset
             popInt(0);
             mth.append("  if (temp[0].i32 > 0) {\n");
             mth.append("    goto " + "pc_" + (opc+idx) + ";\n");
             mth.append("  }\n");
             break;
           case 0x9e:  //ifle
-            idx = readShort();
+            idx = readShort();  //signed offset
             popInt(0);
             mth.append("  if (temp[0].i32 <= 0) {\n");
             mth.append("    goto " + "pc_" + (opc+idx) + ";\n");
             mth.append("  }\n");
             break;
           case 0x9b:  //iflt
-            idx = readShort();
+            idx = readShort();  //signed offset
             popInt(0);
             mth.append("  if (temp[0].i32 < 0) {\n");
             mth.append("    goto " + "pc_" + (opc+idx) + ";\n");
             mth.append("  }\n");
             break;
           case 0x9a:  //ifne
-            idx = readShort();
+            idx = readShort();  //signed offset
             popInt(0);
             mth.append("  if (temp[0].i32 != 0) {\n");
             mth.append("    goto " + "pc_" + (opc+idx) + ";\n");
             mth.append("  }\n");
             break;
           case 0xc7:  //ifnotnull
-            idx = readShort();
+            idx = readShort();  //signed offset
             popObject(0);
             //NOTE : jfvm_arc_release() is called first so it must not change .obj
             mth.append("  jfvm_arc_release(jvm, &temp[0]);\n");
@@ -1237,7 +1237,7 @@ public class Compiler {
             mth.append("  }\n");
             break;
           case 0xc6:  //ifnull
-            idx = readShort();
+            idx = readShort();  //signed offset
             popObject(0);
             mth.append("  jfvm_arc_release(jvm, &temp[0]);\n");
             mth.append("  if (temp[0].obj == NULL) {\n");
@@ -1246,10 +1246,10 @@ public class Compiler {
             break;
           case 0x84:  //iinc
             if (wide) {
-              idx = readShort();
+              idx = readShort() & 0xffff;
               val = readShort();
             } else {
-              idx = readByte();
+              idx = readByte() & 0xff;
               val = readByte();
             }
             if (idx >= argsCount) {
@@ -1262,9 +1262,9 @@ public class Compiler {
             break;
           case 0x15:  //iload
             if (wide) {
-              idx = readShort();
+              idx = readShort() & 0xffff;
             } else {
-              idx = readByte();
+              idx = readByte() & 0xff;
             }
             if (idx >= argsCount) {
               slot = "local";
@@ -1333,13 +1333,13 @@ public class Compiler {
             break;
           case 0xc1:  //instanceof
             //objectref -> boolean
-            idx = readShort();
+            idx = readShort() & 0xffff;
             popObject(0);
             mth.append("  jfvm_instanceof(jvm," + quoteString(cls.getConstString(idx)) + ",temp[0])\n");  //will release objectref
             pushBoolean(0);
             break;
           case 0xba:  //invokedynamic
-            idx = readShort();
+            idx = readShort() & 0xffff;
             readShort();  //0,0
             ConstDynamic dyn = (ConstDynamic)cls.ConstList[idx];
             ConstNameType dynnt = (ConstNameType)cls.ConstList[dyn.name_and_type_index];
@@ -1355,7 +1355,7 @@ public class Compiler {
             mth.append("  stack[stackpos].type = 'L';\n");
             break;
           case 0xb9:  //invokeinterface
-            idx = readShort();
+            idx = readShort() & 0xffff;
             val = readByte(); //count
             readByte();  //0
             if (cls.ConstList[idx] instanceof ConstInterfaceRef) {
@@ -1383,7 +1383,7 @@ public class Compiler {
             if (cnt != 0) mth.append("  stackpos" + getStackCountToArgs(cnt) + ";\n");
             break;
           case 0xb7:  //invokespecial (basically a non-virtual method call)
-            idx = readShort();
+            idx = readShort() & 0xffff;
             methodRef = (ConstMethodRef)cls.ConstList[idx];
             scls = cls.getConstString(methodRef.cls_idx);
             xcls = clspool.getClass(scls);
@@ -1400,7 +1400,7 @@ public class Compiler {
             if (cnt != 0) mth.append("  stackpos" + getStackCountToArgs(cnt) + ";\n");
             break;
           case 0xb8:  //invokestatic
-            idx = readShort();
+            idx = readShort() & 0xffff;
             methodRef = (ConstMethodRef)cls.ConstList[idx];
             scls = cls.getConstString(methodRef.cls_idx);
             xcls = clspool.getClass(scls);
@@ -1416,7 +1416,7 @@ public class Compiler {
             if (cnt != 0) mth.append("  stackpos" + getStackCountToArgs(cnt) + ";\n");
             break;
           case 0xb6:  //invokevirtual
-            idx = readShort();
+            idx = readShort() & 0xffff;
             methodRef = (ConstMethodRef)cls.ConstList[idx];
             scls = cls.getConstString(methodRef.cls_idx);
             smethod = cls.getConstName(methodRef.name_type_idx);
@@ -1458,9 +1458,9 @@ public class Compiler {
             break;
           case 0x36:  //istore
             if (wide) {
-              idx = readShort();
+              idx = readShort() & 0xffff;
             } else {
-              idx = readByte();
+              idx = readByte() & 0xff;
             }
             popInt(0);
             putInt(idx, 0);
@@ -1494,14 +1494,14 @@ public class Compiler {
             mth.append("  stackpos--;\n");
             break;
           case 0xa8:  //jsr
-            idx = readShort();
+            idx = readShort();  //signed offset
             val = jsridx++;
             pushiInt(val);  //the returnAddress is considered an object, only astore... can work on it
             mth.append("  goto pc_" + (opc+idx) + ";\n");
             mth.append("return_" + val + ":\n");
             break;
           case 0xc9:  //jsr_w
-            idx = readInt();
+            idx = readInt();  //signed offset
             val = jsridx++;
             pushiInt(val);  //the returnAddress is considered an object, only astore... can work on it
             mth.append("  goto pc_" + (opc+idx) + ";\n");
@@ -1568,9 +1568,9 @@ public class Compiler {
           case 0x14:  //ldc2_w
           {
             if (bytecode == 0x12)
-              idx = readByte();
+              idx = readByte() & 0xff;
             else
-              idx = readShort();
+              idx = readShort() & 0xffff;
             Const c = cls.ConstList[idx];
             switch (c.type) {
               case 3:
@@ -1607,9 +1607,9 @@ public class Compiler {
             break;
           case 0x16:  //lload
             if (wide) {
-              idx = readShort();
+              idx = readShort() & 0xffff;
             } else {
-              idx = readByte();
+              idx = readByte() & 0xff;
             }
             if (idx >= argsCount) {
               slot = "local";
@@ -1718,9 +1718,9 @@ public class Compiler {
             break;
           case 0x37:  //lstore
             if (wide) {
-              idx = readShort();
+              idx = readShort() & 0xffff;
             } else {
-              idx = readByte();
+              idx = readByte() & 0xff;
             }
             popLong(0);
             putLong(idx, 0);
@@ -1766,7 +1766,7 @@ public class Compiler {
             mth.append("  stackpos--;\n");
             break;
           case 0xc5:  //multianewarray
-            idx = readShort();
+            idx = readShort() & 0xffff;
             val = readByte();  //dimensions
             classRef = (ConstClass)cls.ConstList[idx];
             scls = cls.getConstString(classRef.idx);
@@ -1775,7 +1775,7 @@ public class Compiler {
             mth.append("  stack[stackpos].type = 'L';\n");
             break;
           case 0xbb:  //new
-            idx = readShort();
+            idx = readShort() & 0xffff;
             classRef = (ConstClass)cls.ConstList[idx];
             scls = cls.getConstString(classRef.idx);
             xcls = clspool.getClass(scls);
@@ -1807,7 +1807,7 @@ public class Compiler {
             break;
           case 0xb5:  //putfield
             //objectref, value ->
-            idx = readShort();
+            idx = readShort() & 0xffff;
             fieldRef = (ConstFieldRef)cls.ConstList[idx];
             scls = cls.getConstString(fieldRef.cls_idx);
             sfield = cls.getConstName(fieldRef.name_type_idx);
@@ -1822,7 +1822,7 @@ public class Compiler {
             break;
           case 0xb3:  //putstatic
             //value ->
-            idx = readShort();
+            idx = readShort() & 0xffff;
             fieldRef = (ConstFieldRef)cls.ConstList[idx];
             scls = cls.getConstString(fieldRef.cls_idx);
             sfield = cls.getConstName(fieldRef.name_type_idx);
@@ -1834,9 +1834,9 @@ public class Compiler {
             break;
           case 0xa9:  //return sub (jsr)
             if (wide) {
-              idx = readShort();
+              idx = readShort() & 0xffff;
             } else {
-              idx = readByte();
+              idx = readByte() & 0xff;
             }
             if (idx >= argsCount) {
               slot = "local";
@@ -1910,8 +1910,7 @@ public class Compiler {
       mths.append(mth_pre.toString());
       mths.append(mth.toString());
     } catch (Exception e) {
-//      e.printStackTrace();
-      System.out.println(e.toString());
+      e.printStackTrace(System.out);
     }
   }
 

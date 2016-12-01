@@ -44,4 +44,7 @@ public class Integer {
     }
     return new String(ch, 0, chs);
   }
+  public static String toString(int value) {
+    return toString(value, 10);
+  }
 }
