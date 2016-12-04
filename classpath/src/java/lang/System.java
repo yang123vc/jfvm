@@ -31,4 +31,7 @@ public class System {
   public static native void arraycopy(Object src, int srcPos, Object dest, int destPos, int length);
   /** Copies an array in reverse order. */
   public static native void rarraycopy(Object src, int srcPos, Object dest, int destPos, int length);
+
+  /** Triggers debug breakpoint. */
+  public static native void debug();
 }

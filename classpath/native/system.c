@@ -8,6 +8,10 @@
   #include "system_lnx.c"
 #endif
 
+void java_java_lang_System_debug(JVM *jvm, Slot *args) {
+  __asm("int $3");
+}
+
 static void copy_bytes(JVM *jvm, Object *src, int srcPos, Object *dest, int destPos, int length) {
   jbyte* srcData = src->array->ai8;
   jbyte* destData = dest->array->ai8;

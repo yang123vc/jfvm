@@ -127,9 +127,9 @@ public class Method {
       case '[':
       case 'L': return "obj";
       case 'Z':
-      case 'B': return "i8";
-      case 'C': return "u16";
-      case 'S': return "i16";
+      case 'B':
+      case 'C':
+      case 'S':
       case 'I': return "i32";
       case 'J': return "i64";
       case 'F': return "f32";

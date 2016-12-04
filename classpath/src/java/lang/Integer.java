@@ -18,6 +18,7 @@ public class Integer {
 
   private static char hex[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
   public static String toString(int value, int radix) {
+    if (value == 0) return "0";
     char ch[] = new char[11];
     int chs = 0;
     boolean neg = false;

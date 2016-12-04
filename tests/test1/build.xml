@@ -26,20 +26,21 @@
     <attribute name="libext"/>
     <attribute name="exeext"/>
     <sequential>
-      <exec command="java -jar ../../bin/jfvmc.jar --@{bits} -g test.jar --cp ../../lib/jfvm.jar --out test@{libext} --natives native.c"/>
-      <copy file="../../lib/classpath-@{name}@{bits}@{libext}" todir="."/>
-      <copy file="../../lib/jfvm-@{name}@{bits}@{libext}" todir="."/>
-      <exec command="java -jar ../../bin/jfvml.jar --@{bits} -g classpath-@{name}@{bits} test --main pack.Test --out test@{exeext}"/>
+      <exec command="java -jar ../../bin/jfvmc.jar --@{bits} -g test.jar --cp ../../lib/base.jar ../../lib/zip.jar --out test@{libext} --natives native.c"/>
+      <copy file="../../lib@{bits}/base@{libext}" todir="."/>
+      <copy file="../../lib@{bits}/zip@{libext}" todir="."/>
+      <copy file="../../lib@{bits}/jfvm@{libext}" todir="."/>
+      <exec command="java -jar ../../bin/jfvml.jar --@{bits} -g base zip test --main pack.Test --out test@{exeext}"/>
     </sequential>
   </macrodef>
 
   <target name="win32" depends="jar">
-    <copy file="../../lib/jfvm-win32.dll.a" todir="."/>
+    <copy file="../../lib32/jfvm.dll.a" todir="."/>
     <build bits="32" name="win" libext=".dll" exeext=".exe"/>
   </target>
 
   <target name="win64" depends="jar">
-    <copy file="../../lib/jfvm-win64.dll.a" todir="."/>
+    <copy file="../../lib64/jfvm.dll.a" todir="."/>
     <build bits="64" name="win" libext=".dll" exeext=".exe"/>
   </target>
 

@@ -12,14 +12,16 @@ void jfvm_init_class_pre(JVM *jvm) {
 
 static Class *class_throwable;
 static Class *class_string;
-static int method_string_init_clsidx;
+static int method_string_init_byte_array_clsidx;
+static int method_string_init_char_array_clsidx;
 static jboolean init_pst = J_FALSE;  //do NOT call static {} functions until all libraries are loaded
 
 void jfvm_init_class_pst(JVM *jvm) {
   init_pst = J_TRUE;
   class_throwable = jfvm_find_class(jvm, "java/lang/Throwable");
   class_string = jfvm_find_class(jvm, "java/lang/String");
-  method_string_init_clsidx = jfvm_get_method_clsidx(jvm, class_string, "<init>([B)V");
+  method_string_init_byte_array_clsidx = jfvm_get_method_clsidx(jvm, class_string, "<init>([B)V");
+  method_string_init_char_array_clsidx = jfvm_get_method_clsidx(jvm, class_string, "<init>([C)V");
 }
 
 /** Loads a DLL adds classes to classpath and returns DLL handle. */
@@ -340,14 +342,41 @@ Object* jfvm_new_string(JVM *jvm, const char *str, int len) {
   stack[stackpos].type = 'L';
   memcpy(&stack[stackpos].obj->array->ai8[0],str,len);
   //String(byte[])
-  jfvm_invokespecial(jvm, class_string, method_string_init_clsidx, &stack[stackpos-1]);
+  jfvm_invokespecial(jvm, class_string, method_string_init_byte_array_clsidx, &stack[stackpos-1]);
   stackpos -= 2;
   strobj = stack[stackpos].obj;
   jfvm_stack_free(jvm, stack);
   return strobj;
 }
 
-const char *jfvm_string_getbytes(JVM *jvm, Object *str) {
+Object* jfvm_new_string_utf16(JVM *jvm, const jchar *str, int len) {
+  int stackpos = -1;
+  Object *strobj;
+  Slot *stack = jfvm_stack_alloc(jvm, 3);
+
+  //new String()
+  stackpos++;
+  stack[stackpos].obj = jfvm_new(jvm, class_string);
+  stack[stackpos].type = 'L';
+  //dup
+  stackpos++;
+  stack[stackpos].obj = stack[stackpos-1].obj;
+  stack[stackpos].type = stack[stackpos-1].type;
+  jfvm_arc_inc(jvm, stack[stackpos].obj);
+  //new char[]
+  stackpos++;
+  stack[stackpos].obj = jfvm_newarray(jvm,'C',len);
+  stack[stackpos].type = 'L';
+  memcpy(&stack[stackpos].obj->array->ai16[0],str,len*2);
+  //String(char[])
+  jfvm_invokespecial(jvm, class_string, method_string_init_char_array_clsidx, &stack[stackpos-1]);
+  stackpos -= 2;
+  strobj = stack[stackpos].obj;
+  jfvm_stack_free(jvm, stack);
+  return strobj;
+}
+
+const char *jfvm_string_get_utf8(JVM *jvm, Object *str) {
   int fidx = jfvm_get_field_objidx(jvm, str->cls, "value");
   Object *value = str->fields[fidx];
   jchar *ca = &value->array->ai16[0];
@@ -359,6 +388,22 @@ const char *jfvm_string_getbytes(JVM *jvm, Object *str) {
   return cstr;
 }
 
-void jfvm_string_releasebytes(JVM *jvm, const char *cstr) {
+void jfvm_string_release_utf8(JVM *jvm, const char *cstr) {
+  jfvm_free(jvm, (void*)cstr);
+}
+
+const jchar *jfvm_string_get_utf16(JVM *jvm, Object *str) {
+  int fidx = jfvm_get_field_objidx(jvm, str->cls, "value");
+  Object *value = str->fields[fidx];
+  jchar *ca = &value->array->ai16[0];
+  int len = value->array->length;
+  jchar *cstr = jfvm_alloc(jvm, (len+1)*2);
+  for(int a=0;a<len;a++) {
+    cstr[a] = ca[a];
+  }
+  return cstr;
+}
+
+void jfvm_string_release_utf16(JVM *jvm, const jchar *cstr) {
   jfvm_free(jvm, (void*)cstr);
 }

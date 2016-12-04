@@ -306,7 +306,7 @@ public class Compiler {
             popObject(1);  //arrayref
             mth.append("  if (temp[1].obj == NULL) jfvm_throw_npe(jvm);\n");
             mth.append("  if (temp[1].obj->array->length < temp[0].i32) jfvm_throw_outofbounds(jvm, temp[1].obj, temp[0].i32);\n");
-            mth.append("  jfvm_arc_put(jvm, &temp[2].obj->array->objs[temp[0].i32], &temp[1].obj);\n");
+            mth.append("  jfvm_arc_put(jvm, &temp[1].obj->array->objs[temp[0].i32], &temp[2].obj);\n");
             mth.append("  jfvm_arc_release(jvm, &temp[1]);\n");
             break;
           case 0x01:  //aconst_null
@@ -584,7 +584,7 @@ public class Compiler {
             mth.append("  jfvm_arc_release(jvm, &temp[1]);\n");
             break;
           case 0x52:  //dastore
-            popByte(2);  //value
+            popDouble(2);  //value
             popInt(0);  //index
             popObject(1);  //arrayref
             mth.append("  if (temp[1].obj == NULL) jfvm_throw_npe(jvm);\n");
@@ -861,7 +861,7 @@ public class Compiler {
             mth.append("  jfvm_arc_release(jvm, &temp[1]);\n");
             break;
           case 0x51:  //fastore
-            popByte(2);  //value
+            popFloat(2);  //value
             popInt(0);  //index
             popObject(1);  //arrayref
             mth.append("  if (temp[1].obj == NULL) jfvm_throw_npe(jvm);\n");
@@ -1081,7 +1081,7 @@ public class Compiler {
             mth.append("  stackpos--;\n");
             break;
           case 0x4f:  //iastore
-            popByte(2);  //value
+            popInt(2);  //value
             popInt(0);  //index
             popObject(1);  //arrayref
             mth.append("  if (temp[1].obj == NULL) jfvm_throw_npe(jvm);\n");
@@ -1537,7 +1537,7 @@ public class Compiler {
             mth.append("  stackpos--;\n");
             break;
           case 0x50:  //lastore
-            popByte(2);  //value
+            popLong(2);  //value
             popInt(0);  //index
             popObject(1);  //arrayref
             mth.append("  if (temp[1].obj == NULL) jfvm_throw_npe(jvm);\n");
@@ -1861,7 +1861,7 @@ public class Compiler {
             mth.append("  jfvm_arc_release(jvm, &temp[1]);\n");
             break;
           case 0x56:  //sastore
-            popByte(2);  //value
+            popShort(2);  //value
             popInt(0);  //index
             popObject(1);  //arrayref
             mth.append("  if (temp[1].obj == NULL) jfvm_throw_npe(jvm);\n");

@@ -46,5 +46,6 @@ public class Double {
   }
 
   public native static double longBitsToDouble(long bits);
+  public native static long doubleToLongBits(double bits);
 
 }

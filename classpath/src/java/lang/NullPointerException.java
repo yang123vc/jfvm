@@ -6,5 +6,8 @@ package java.lang;
  */
 
 public class NullPointerException extends Exception {
-
+  public NullPointerException() {}
+  public NullPointerException(String name) {
+    super(name);
+  }
 }

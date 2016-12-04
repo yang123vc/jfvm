@@ -16,10 +16,10 @@
       <exec command="@{gcc} -m@{bits} -g -DX@{bits} -D@{platform} -I ../include -g src/class.c -c -o class.o"/>
       <exec command="@{gcc} -m@{bits} -g -DX@{bits} -D@{platform} -I ../include -g src/system.c -c -o system.o"/>
       <exec command="@{gcc} -m@{bits} -g -DX@{bits} -D@{platform} -I ../include -g src/native.c -c -o native.o"/>
-      <delete file="../lib/jfvm-@{name}@{bits}@{ext}.a"/>
-      <exec command="@{dlltool} --export-all-symbols -D jfvm-@{name}@{bits}@{ext} -e exports.o -l ../lib/jfvm-@{name}@{bits}@{ext}.a arc.o exception.o object.o class.o system.o native.o"/>
-      <delete file="../lib/jfvm-@{name}@{bits}@{ext}"/>
-      <exec command="@{gcc} -m@{bits} -shared -o ../lib/jfvm-@{name}@{bits}@{ext} arc.o exception.o object.o class.o system.o native.o exports.o"/>
+      <delete file="../lib@{bits}/jfvm@{ext}.a"/>
+      <exec command="@{dlltool} --export-all-symbols -D jfvm@{ext} -e exports.o -l ../lib@{bits}/jfvm@{ext}.a arc.o exception.o object.o class.o system.o native.o"/>
+      <delete file="../lib@{bits}/jfvm@{ext}"/>
+      <exec command="@{gcc} -m@{bits} -shared -o ../lib@{bits}/jfvm@{ext} arc.o exception.o object.o class.o system.o native.o exports.o"/>
       <delete>
         <fileset dir="." includes="*.o"/>
       </delete>
@@ -39,8 +39,8 @@
       <exec command="@{gcc} -m@{bits} -g -DX@{bits} -D@{platform} -fPIC -I ../include -g src/class.c -c -o class.o"/>
       <exec command="@{gcc} -m@{bits} -g -DX@{bits} -D@{platform} -fPIC -I ../include -g src/system.c -c -o system.o"/>
       <exec command="@{gcc} -m@{bits} -g -DX@{bits} -D@{platform} -fPIC -I ../include -g src/native.c -c -o native.o"/>
-      <delete file="../lib/jfvm-@{name}@{bits}@{ext}"/>
-      <exec command="@{gcc} -m@{bits} -shared -o ../lib/jfvm-@{name}@{bits}@{ext} arc.o exception.o object.o class.o system.o native.o"/>
+      <delete file="../lib@{bits}/jfvm@{ext}"/>
+      <exec command="@{gcc} -m@{bits} -shared -o ../lib@{bits}/jfvm@{ext} arc.o exception.o object.o class.o system.o native.o"/>
       <delete>
         <fileset dir="." includes="*.o"/>
       </delete>

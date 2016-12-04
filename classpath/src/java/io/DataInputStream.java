@@ -110,4 +110,19 @@ public class DataInputStream extends InputStream {
     long bits = readLong();
     return Double.longBitsToDouble(bits);
   }
+
+  public void readFully(byte buf[], int offset, int length) throws IOException {
+    int toRead = length;
+    while (toRead > 0) {
+      int read = read(buf, offset, toRead);
+      if (read > 0) {
+        offset += read;
+        toRead -= read;
+      }
+    }
+  }
+
+  public void readFully(byte buf[]) throws IOException {
+    readFully(buf, 0, buf.length);
+  }
 }

@@ -86,7 +86,7 @@ public class ArrayList<E> implements List<E> {
   }
 
   public int size() {
-    return list.length;
+    return size;
   }
 
   public Object[] toArray() {

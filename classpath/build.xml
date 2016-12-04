@@ -3,31 +3,38 @@
   <property environment="env"/>
 
   <target name="compile" description="compile the source">
-    <!-- Compile the java code from ${src} into ${build} -->
+    <!-- Compile the java code from ${base} into ${build} -->
     <mkdir dir="classes"/>
-    <javac srcdir="src" destdir="classes" target="1.8" source="1.8" debug="true">
-    </javac>
+    <javac srcdir="src" destdir="classes" target="1.8" source="1.8" debug="true"/>
   </target>
 
   <target name="jar" depends="compile" description="build jar file">
-    <!-- Build jar file from class files -->
-    <jar destfile="../lib/jfvm.jar" includes="**/*.class" basedir="classes">
+    <!-- Build jar files from class files -->
+    <jar destfile="../lib/base.jar">
+      <fileset dir="classes">
+        <include name="**/*.class"/>
+        <exclude name="java/util/zip/**/*.class"/>
+      </fileset>
+    </jar>
+    <jar destfile="../lib/zip.jar">
+      <fileset dir="classes">
+        <include name="java/util/zip/**/*.class"/>
+      </fileset>
     </jar>
   </target>
 
-  <macrodef name="build">
+  <macrodef name="base">
     <attribute name="bits"/>
     <attribute name="name"/>
     <attribute name="ext"/>
     <attribute name="a"/>
     <sequential>
-      <copy file="../lib/jfvm-@{name}@{bits}@{ext}@{a}" todir="."/>
       <java jar="../bin/jfvmc.jar" fork="true">
         <arg value="--@{bits}"/>
         <arg value="-g"/>
-        <arg value="../lib/jfvm.jar"/>
+        <arg value="../lib/base.jar"/>
         <arg value="--out"/>
-        <arg value="../lib/classpath-@{name}@{bits}@{ext}"/>
+        <arg value="../lib@{bits}/base@{ext}"/>
         <arg value="--natives"/>
         <arg value="native/object.c"/>
         <arg value="native/class.c"/>
@@ -41,20 +48,63 @@
     </sequential>
   </macrodef>
 
+  <macrodef name="zip">
+    <attribute name="bits"/>
+    <attribute name="name"/>
+    <attribute name="ext"/>
+    <attribute name="a"/>
+    <sequential>
+      <java jar="../bin/jfvmc.jar" fork="true">
+        <arg value="--@{bits}"/>
+        <arg value="-g"/>
+        <arg value="../lib/zip.jar"/>
+        <arg value="--cp"/>
+        <arg value="../lib/base.jar"/>
+        <arg value="--out"/>
+        <arg value="../lib@{bits}/zip@{ext}"/>
+        <arg value="--natives"/>
+        <arg value="native/zip.c"/>
+        <arg value="native/zlib/adler32.c"/>
+        <arg value="native/zlib/compress.c"/>
+        <arg value="native/zlib/crc32.c"/>
+        <arg value="native/zlib/deflate.c"/>
+        <arg value="native/zlib/gzclose.c"/>
+        <arg value="native/zlib/gzlib.c"/>
+        <arg value="native/zlib/gzread.c"/>
+        <arg value="native/zlib/gzwrite.c"/>
+        <arg value="native/zlib/infback.c"/>
+        <arg value="native/zlib/inffast.c"/>
+        <arg value="native/zlib/inflate.c"/>
+        <arg value="native/zlib/inftrees.c"/>
+        <arg value="native/zlib/trees.c"/>
+        <arg value="native/zlib/uncompr.c"/>
+        <arg value="native/zlib/zutil.c"/>
+      </java>
+    </sequential>
+  </macrodef>
+
   <target name="win32" depends="jar" description="build library file">
-    <build bits="32" name="win" ext=".dll" a=".a"/>
+    <copy file="../lib32/jfvm.dll.a" todir="."/>
+    <base bits="32" name="win" ext=".dll" a=".a"/>
+    <zip bits="32" name="win" ext=".dll" a=".a"/>
   </target>
 
   <target name="win64" depends="jar" description="build library file">
-    <build bits="64" name="win" ext=".dll" a=".a"/>
+    <copy file="../lib64/jfvm.dll.a" todir="."/>
+    <base bits="64" name="win" ext=".dll" a=".a"/>
+    <zip bits="64" name="win" ext=".dll" a=".a"/>
   </target>
 
   <target name="lnx32" depends="jar" description="build library file">
-    <build bits="32" name="lnx" ext=".so" a=""/>
+    <copy file="../lib32/jfvm.so" todir="."/>
+    <base bits="32" name="lnx" ext=".so" a=""/>
+    <zip bits="32" name="lnx" ext=".so" a=""/>
   </target>
 
   <target name="lnx64" depends="jar" description="build library file">
-    <build bits="64" name="lnx" ext=".so" a=""/>
+    <copy file="../lib64/jfvm.so" todir="."/>
+    <base bits="64" name="lnx" ext=".so" a=""/>
+    <zip bits="64" name="lnx" ext=".so" a=""/>
   </target>
 
   <target name="help">

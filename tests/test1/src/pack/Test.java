@@ -1,6 +1,7 @@
 package pack;
 
 import java.lang.reflect.Array;
+import java.util.zip.*;
 
 class Test {
   public int x;
@@ -16,6 +17,7 @@ class Test {
     t.testLambda2();
     t.testExceptions();
     t.testReflection();
+    t.testZip();
     t.testThreads();
     return 0;
   }
@@ -99,5 +101,15 @@ class Test {
     Class ci = i1.getClass();
     int i2[] = (int[])Array.newInstance(ci, 200);
     System.out.println("length=" + i2.length);
+  }
+
+  public void testZip() {
+    try {
+      ZipFile zf = new ZipFile("test.jar");
+      int cnt = zf.size();
+      System.out.println("zip.size=" + cnt);
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
   }
 }

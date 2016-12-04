@@ -22,4 +22,5 @@ public class RandomAccessFile {
   public native long getFilePointer() throws IOException;
   public native void seek(long pos) throws IOException;
   public native void close() throws IOException;
+  public native long length() throws IOException;
 }

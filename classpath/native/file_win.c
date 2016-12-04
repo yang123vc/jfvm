@@ -3,9 +3,9 @@
 //input stream
 
 void java_java_io_FileInputStream_open(JVM *jvm, Slot *args) {
-  const char *str = jfvm_string_getbytes(jvm, args[1].obj);
+  const char *str = jfvm_string_get_utf8(jvm, args[1].obj);
   HANDLE handle = CreateFile(str, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-  jfvm_string_releasebytes(jvm, str);
+  jfvm_string_release_utf8(jvm, str);
   if (handle == INVALID_HANDLE_VALUE) {
     jfvm_stack_release(jvm, args, 2);
     jfvm_throw_ioexception(jvm);
@@ -37,7 +37,7 @@ void java_java_io_FileInputStream_read_(JVM *jvm, Slot *args) {
 
 void java_java_io_FileInputStream_read_ABII(JVM *jvm, Slot *args) {
   HANDLE handle = (HANDLE)jfvm_read_handle_ptr(jvm, args[0].obj);
-  int read = args[3].i32;  //args[1].obj->array->length;
+  int read = args[3].i32;
   ReadFile(handle, &args[1].obj->array->ai8 + args[2].i32, read, &read, NULL);
   jfvm_stack_release(jvm, args, 2);
   args[0].i32 = read;
@@ -56,9 +56,9 @@ void java_java_io_FileInputStream_available(JVM *jvm, Slot *args) {
 //output stream
 
 void java_java_io_FileOutputStream_open(JVM *jvm, Slot *args) {
-  const char *str = jfvm_string_getbytes(jvm, args[1].obj);
+  const char *str = jfvm_string_get_utf8(jvm, args[1].obj);
   HANDLE handle = CreateFile(str, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-  jfvm_string_releasebytes(jvm, str);
+  jfvm_string_release_utf8(jvm, str);
   if (handle == INVALID_HANDLE_VALUE) {
     jfvm_stack_release(jvm, args, 2);
     jfvm_throw_ioexception(jvm);
@@ -88,7 +88,7 @@ void java_java_io_FileOutputStream_write_B(JVM *jvm, Slot *args) {
 
 void java_java_io_FileOutputStream_write_ABII(JVM *jvm, Slot *args) {
   HANDLE handle = (HANDLE)jfvm_read_handle_ptr(jvm, args[0].obj);
-  int write = args[3].i32;  //args[1].obj->array->length;
+  int write = args[3].i32;
   WriteFile(handle, &args[1].obj->array->ai8 + args[2].i32, write, &write, NULL);
   jfvm_stack_release(jvm, args, 2);
   args[0].i32 = write;
@@ -98,15 +98,15 @@ void java_java_io_FileOutputStream_write_ABII(JVM *jvm, Slot *args) {
 //random
 
 void java_java_io_RandomAccessFile_open(JVM *jvm, Slot *args) {
-  const char *str = jfvm_string_getbytes(jvm, args[1].obj);
-  const char *mode = jfvm_string_getbytes(jvm, args[2].obj);
+  const char *str = jfvm_string_get_utf8(jvm, args[1].obj);
+  const char *mode = jfvm_string_get_utf8(jvm, args[2].obj);
   HANDLE handle;
   if (strchr(mode, 'w') == NULL)
     handle = CreateFile(str, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
   else
     handle = CreateFile(str, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-  jfvm_string_releasebytes(jvm, str);
-  jfvm_string_releasebytes(jvm, mode);
+  jfvm_string_release_utf8(jvm, str);
+  jfvm_string_release_utf8(jvm, mode);
   if (handle == INVALID_HANDLE_VALUE) {
     jfvm_stack_release(jvm, args, 3);
     jfvm_throw_ioexception(jvm);
@@ -128,7 +128,7 @@ void java_java_io_RandomAccessFile_close(JVM *jvm, Slot *args) {
 
 void java_java_io_RandomAccessFile_read_ABII(JVM *jvm, Slot *args) {
   HANDLE handle = (HANDLE)jfvm_read_handle_ptr(jvm, args[0].obj);
-  int read = args[3].i32;  //args[1].obj->array->length;
+  int read = args[3].i32;
   ReadFile(handle, &args[1].obj->array->ai8 + args[2].i32, read, &read, NULL);
   jfvm_stack_release(jvm, args, 2);
   args[0].i32 = read;
@@ -137,7 +137,7 @@ void java_java_io_RandomAccessFile_read_ABII(JVM *jvm, Slot *args) {
 
 void java_java_io_RandomAccessFile_write_ABII(JVM *jvm, Slot *args) {
   HANDLE handle = (HANDLE)jfvm_read_handle_ptr(jvm, args[0].obj);
-  int write = args[3].i32;  //args[1].obj->array->length;
+  int write = args[3].i32;
   WriteFile(handle, &args[1].obj->array->ai8 + args[2].i32, write, &write, NULL);
   jfvm_stack_release(jvm, args, 2);
   args[0].i32 = write;
@@ -159,4 +159,16 @@ void java_java_io_RandomAccessFile_seek(JVM *jvm, Slot *args) {
   int high = args[1].i32high;
   SetFilePointer(handle, args[1].i32low, &high, FILE_BEGIN);
   jfvm_arc_release(jvm, &args[0]);
+}
+
+void java_java_io_RandomAccessFile_length(JVM *jvm, Slot *args) {
+  HANDLE handle = (HANDLE)jfvm_read_handle_ptr(jvm, args[0].obj);
+  int high;
+  int low = GetFileSize(handle, &high);
+  jfvm_arc_release(jvm, &args[0]);
+  jlong length = high;
+  length <<= 32;
+  length += low;
+  args[0].i64 = length;
+  args[0].type = 'I';
 }

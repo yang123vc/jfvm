@@ -14,25 +14,28 @@
 #define J_TRUE 1
 #define J_FALSE 0
 
-#define T_OBJECT 'L'
-#define T_BOOLEAN 'Z'
-#define T_BYTE 'B'
-#define T_CHAR 'C'
-#define T_SHORT 'S'
-#define T_INT 'I'
-#define T_LONG 'J'
-#define T_FLOAT 'F'
-#define T_DOUBLE 'D'
+//Slot types
+#define S_OBJECT 'L'  //includes all arrays
+#define S_BOOLEAN 'Z'
+#define S_BYTE 'B'
+#define S_CHAR 'C'
+#define S_SHORT 'S'
+#define S_INT 'I'
+#define S_LONG 'J'
+#define S_FLOAT 'F'
+#define S_DOUBLE 'D'
 
-#define T_ARRAY_OBJECT 'A'
-#define T_ARRAY_BOOLEAN 'Z'
-#define T_ARRAY_BYTE 'B'
-#define T_ARRAY_CHAR 'C'
-#define T_ARRAY_SHORT 'S'
-#define T_ARRAY_INT 'I'
-#define T_ARRAY_LONG 'J'
-#define T_ARRAY_FLOAT 'F'
-#define T_ARRAY_DOUBLE 'D'
+//Object types
+#define O_OBJECT 'L'
+#define O_ARRAY_OBJECT 'A'
+#define O_ARRAY_BOOLEAN 'Z'
+#define O_ARRAY_BYTE 'B'
+#define O_ARRAY_CHAR 'C'
+#define O_ARRAY_SHORT 'S'
+#define O_ARRAY_INT 'I'
+#define O_ARRAY_LONG 'J'
+#define O_ARRAY_FLOAT 'F'
+#define O_ARRAY_DOUBLE 'D'
 
 //Java flags
 #define ACC_PUBLIC 0x0001 //Declared public; may be accessed from outside its package.
@@ -159,6 +162,7 @@ struct Slot {
     jint i32;
     unsigned int u32;
     jlong i64;
+    unsigned long long u64;
     jfloat f32;
     jdouble f64;
     void *v;
@@ -366,10 +370,16 @@ Object* jfvm_anewarray(JVM *jvm, const char *cls, int cnt);
 Object* jfvm_multianewarray(JVM *jvm, int numdims, const char *cls, Slot *dims);
 /** Creates a new string from C string */
 Object* jfvm_new_string(JVM *jvm, const char *cstr, int len);
-/** Returns C string from a Java String (must call jfvm_string_releasebytes() to free) */
-const char *jfvm_string_getbytes(JVM *jvm, Object *str);
-/** Frees a C string returned from jfvm_string_getbytes(). */
-void jfvm_string_releasebytes(JVM *jvm, const char *cstr);
+/** Creates a new string from UTF16 string (len = # chars) */
+Object* jfvm_new_string_utf16(JVM *jvm, const jchar *cstr, int len);
+/** Returns C string from a Java String (must call jfvm_string_release_utf8() to free) */
+const char *jfvm_string_get_utf8(JVM *jvm, Object *str);
+/** Frees a C string returned from jfvm_string_get_utf8(). */
+void jfvm_string_release_utf8(JVM *jvm, const char *cstr);
+/** Returns UTF16 string from a Java String (must call jfvm_string_release_utf16() to free) */
+const jchar *jfvm_string_get_utf16(JVM *jvm, Object *str);
+/** Frees a UTF16 string returned from jfvm_string_get_utf16(). */
+void jfvm_string_release_utf16(JVM *jvm, const jchar *cstr);
 /** Determines if cls is instance of class of name. */
 jboolean jfvm_instanceof_class(JVM *jvm, const char *name, Class *cls);
 /** Determines if object in slot is instance of class of name. */

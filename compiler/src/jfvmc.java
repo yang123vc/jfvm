@@ -250,9 +250,9 @@ public class jfvmc implements ClassPool {
       }
       //these should be copied into current folder using any build.xml
       if (isWindows) {
-        cmd.add("jfvm-win" + bits + ".dll.a");
+        cmd.add("jfvm.dll.a");
       } else {
-        cmd.add("jfvm-lnx" + bits + ".so");
+        cmd.add("jfvm.so");
       }
       cmd.add("oes/dll.o");
       cmd.add("-o");
@@ -261,7 +261,7 @@ public class jfvmc implements ClassPool {
 
       System.out.println("Done");
     } catch (Exception e) {
-      e.printStackTrace();
+      e.printStackTrace(System.out);
     }
   }
   public VMClass getClass(String scls) throws Exception {
@@ -303,7 +303,7 @@ public class jfvmc implements ClassPool {
           System.out.println(s);
         }
       } catch (Exception e) {
-        e.printStackTrace();
+        e.printStackTrace(System.out);
       }
     }
   }

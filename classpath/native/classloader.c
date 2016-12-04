@@ -1,9 +1,10 @@
 #include <jfvm.h>
 
 void java_java_lang_ClassLoader_add(JVM *jvm, Slot *local) {
-  const char *cstr = jfvm_string_getbytes(jvm, local[0].obj);
+  const char *cstr = jfvm_string_get_utf8(jvm, local[0].obj);
   jfvm_arc_release(jvm, &local[0]);
   void *ref = jfvm_classpath_add(jvm, cstr);
+  jfvm_string_release_utf8(jvm, cstr);
   Object *ret = jfvm_newarray(jvm, 'B', sizeof(void*));
   ret->array->ptr[0] = ref;
   local[0].obj = ret;

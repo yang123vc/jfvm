@@ -7,9 +7,9 @@
 //input stream
 
 void java_java_io_FileInputStream_open(JVM *jvm, Slot *args) {
-  const char *str = jfvm_string_getbytes(jvm, args);
+  const char *str = jfvm_string_get_utf8(jvm, args);
   int handle = open(str, O_RDONLY);
-  jfvm_string_releasebytes(jvm, str);
+  jfvm_string_release_utf8(jvm, str);
   if (handle == -1) {
     jfvm_stack_release(jvm, args, 2);
     jfvm_throw_ioexception(jvm);
@@ -57,9 +57,9 @@ void java_java_io_FileInputStream_available(JVM *jvm, Slot *args) {
 //output stream
 
 void java_java_io_FileOutputStream_open(JVM *jvm, Slot *args) {
-  const char *str = jfvm_string_getbytes(jvm, args);
+  const char *str = jfvm_string_get_utf8(jvm, args);
   int handle = open(str, O_WRONLY | O_CREAT | O_TRUNC);
-  jfvm_string_releasebytes(jvm, str);
+  jfvm_string_release_utf8(jvm, str);
   if (handle == -1) {
     jfvm_stack_release(jvm, args, 2);
     jfvm_throw_ioexception(jvm);
@@ -96,15 +96,15 @@ void java_java_io_FileOutputStream_write_ABII(JVM *jvm, Slot *args) {
 //random
 
 void java_java_io_RandomAccessFile_open(JVM *jvm, Slot *args) {
-  const char *str = jfvm_string_getbytes(jvm, args[1].obj);
-  const char *mode = jfvm_string_getbytes(jvm, args[2].obj);
+  const char *str = jfvm_string_get_utf8(jvm, args[1].obj);
+  const char *mode = jfvm_string_get_utf8(jvm, args[2].obj);
   int handle;
   if (strchr(mode, 'w') == NULL)
     handle = open(str, O_RDONLY);
   else
     handle = open(str, O_WRONLY | O_CREAT | O_TRUNC);
-  jfvm_string_releasebytes(jvm, str);
-  jfvm_string_releasebytes(jvm, mode);
+  jfvm_string_release_utf8(jvm, str);
+  jfvm_string_release_utf8(jvm, mode);
   if (handle == -1) {
     jfvm_stack_release(jvm, args, 3);
     jfvm_throw_ioexception(jvm);
@@ -155,4 +155,11 @@ void java_java_io_RandomAccessFile_seek(JVM *jvm, Slot *args) {
   jfvm_arc_release(jvm, &args[0]);
 }
 
-
+void java_java_io_RandomAccessFile_length(JVM *jvm, Slot *args) {
+  struct stat fs;
+  int handle = jfvm_read_handle_int(jvm, args[0].obj);
+  fstat(handle, &fs);
+  jfvm_stack_release(jvm, args, 1);
+  args[0].i64 = fs.st_size;
+  args[0].type = 'I';
+}

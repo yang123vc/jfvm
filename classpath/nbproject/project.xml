@@ -6,15 +6,20 @@
             <name>jfvm-classpath</name>
         </general-data>
         <general-data xmlns="http://www.netbeans.org/ns/freeform-project/2">
-            <!-- Do not use Project Properties customizer when editing this file manually. 
- To prevent the customizer from showing, create nbproject/project.properties file and enter 
-auxiliary.show.customizer=false 
-property there. Adding 
+            <!-- Do not use Project Properties customizer when editing this file manually.
+ To prevent the customizer from showing, create nbproject/project.properties file and enter
+auxiliary.show.customizer=false
+property there. Adding
 auxiliary.show.customizer.message=<message>
  will show your customized message when someone attempts to open the customizer.  -->
             <name>jfvm-classpath</name>
             <properties/>
             <folders>
+                <source-folder>
+                    <label>jfvm-classpath</label>
+                    <location>.</location>
+                    <encoding>windows-1252</encoding>
+                </source-folder>
                 <source-folder>
                     <label>src</label>
                     <type>java</type>
@@ -27,14 +32,10 @@ auxiliary.show.customizer.message=<message>
                     <location>native</location>
                     <encoding>windows-1252</encoding>
                 </source-folder>
-                <source-folder>
-                    <label>jfvm-classpath</label>
-                    <location>.</location>
-                    <encoding>windows-1252</encoding>
-                </source-folder>
             </folders>
             <ide-actions>
                 <action name="build">
+                    <script>nbproject/nbjdk.xml</script>
                     <target>compile</target>
                 </action>
             </ide-actions>
@@ -61,9 +62,6 @@ auxiliary.show.customizer.message=<message>
         <java-data xmlns="http://www.netbeans.org/ns/freeform-project-java/4">
             <compilation-unit>
                 <package-root>src</package-root>
-                <source-level>1.8</source-level>
-            </compilation-unit>
-            <compilation-unit>
                 <package-root>native</package-root>
                 <source-level>1.8</source-level>
             </compilation-unit>

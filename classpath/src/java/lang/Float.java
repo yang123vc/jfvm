@@ -46,4 +46,5 @@ public class Float {
   }
 
   public native static float intBitsToFloat(int bits);
+  public native static int floatToIntBits(float bits);
 }

@@ -64,7 +64,7 @@ void jfvm_throw_abstractmethodcalled(JVM *jvm) {
 }
 
 void jfvm_throw_ioexception(JVM *jvm) {
-  Object *ex = jfvm_new(jvm, jfvm_find_class(jvm, "java/lang/IOException"));
+  Object *ex = jfvm_new(jvm, jfvm_find_class(jvm, "java/io/IOException"));
   //TODO : call ctor with string describing cause of exception
   jfvm_throw_exception(jvm, ex);
 }

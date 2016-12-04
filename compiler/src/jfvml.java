@@ -100,9 +100,9 @@ public class jfvml {
       cmd.add(oes + "/main.o");
       //these should be copied into current folder in ant build.xml
       if (isWindows) {
-        cmd.add("jfvm-win" + bits + ".dll.a");
+        cmd.add("jfvm.dll.a");
       } else {
-        cmd.add("jfvm-lnx" + bits + ".so");
+        cmd.add("jfvm.so");
         cmd.add("-ldl");
         cmd.add("-lpthread");
       }
@@ -115,7 +115,7 @@ public class jfvml {
 
       System.out.println("Done");
     } catch (Exception e) {
-      e.printStackTrace();
+      e.printStackTrace(System.out);
     }
   }
   private void exec(String cmd[]) throws Exception {
@@ -149,7 +149,7 @@ public class jfvml {
           System.out.println(s);
         }
       } catch (Exception e) {
-        e.printStackTrace();
+        e.printStackTrace(System.out);
       }
     }
   }
