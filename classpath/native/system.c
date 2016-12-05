@@ -101,8 +101,7 @@ static void copy_objs(JVM *jvm, Object *src, int srcPos, Object *dest, int destP
     if (destPos >= destLength) {
       jfvm_throw_outofbounds(jvm, dest, destPos);
     }
-    //TODO : need to use arc get/set
-    destData[destPos++] = srcData[srcPos++];
+    jfvm_arc_copy(jvm, &destData[destPos++], &srcData[srcPos++]);
     length--;
   }
 }
@@ -245,8 +244,7 @@ static void rcopy_objs(JVM *jvm, Object *src, int srcPos, Object *dest, int dest
     if (destPos >= destLength) {
       jfvm_throw_outofbounds(jvm, dest, destPos);
     }
-    //TODO : need to use arc get/set
-    destData[destPos--] = srcData[srcPos--];
+    jfvm_arc_copy(jvm, &destData[destPos--], &srcData[srcPos--]);
     length--;
   }
 }

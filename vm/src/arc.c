@@ -54,6 +54,12 @@ void jfvm_arc_put(JVM *jvm, Object **dest, Object **src) {
   }
 }
 
+void jfvm_arc_copy(JVM *jvm, Object **dest, Object **src) {
+  Object *temp = NULL;
+  jfvm_arc_get(jvm, &temp, src);
+  jfvm_arc_put(jvm, dest, &temp);
+}
+
 void jfvm_arc_delete(JVM *jvm, Object *obj) {
   if (obj == NULL) return;
 //  printf("jfvm_arc_delete:%s:%p\n", obj->cls->name, obj);
