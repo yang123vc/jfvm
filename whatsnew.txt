@@ -1,6 +1,6 @@
 ChangeLog...
 
-Dec 5/2015 : v0.2 released!
+Dec 5/2016 : v0.2 released!
   - lots of bug fixes and new classes added
 
 Nov 24/2016 : functions need to define their own local vars
