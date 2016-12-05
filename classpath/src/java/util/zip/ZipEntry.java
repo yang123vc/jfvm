@@ -29,7 +29,6 @@ public class ZipEntry {
     return date;
   }
   public long getTime() {
-    //TODO
-    return 0;
+    return date.getTime();
   }
 }
