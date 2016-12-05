@@ -48,9 +48,9 @@ See docs/help.txt for more info.
 
 http://github.com/pquiring/jfvm
 
-Version 0.1
+Version 0.2
 
-Nov 22, 2016
+Dec 5, 2016
 
 Peter Quiring
 pquiring@gmail.com

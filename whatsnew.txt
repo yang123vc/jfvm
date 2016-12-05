@@ -1,5 +1,8 @@
 ChangeLog...
 
+Dec 5/2015 : v0.2 released!
+  - lots of bug fixes and new classes added
+
 Nov 24/2016 : functions need to define their own local vars
   - previously the invoking function had to ensure the stack had enough room
     for the args and local vars of the called function.
