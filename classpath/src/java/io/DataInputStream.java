@@ -29,6 +29,9 @@ public class DataInputStream extends InputStream {
   public void close() throws IOException {
     is.close();
   }
+  public int available() throws IOException {
+    return is.available();
+  }
 
   public int read() throws IOException {
     return is.read();

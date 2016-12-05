@@ -29,4 +29,7 @@ public class BufferedReader extends Reader {
     } while (true);
     return sb.toString();
   }
+  public int available() throws IOException {
+    return reader.available();
+  }
 }
