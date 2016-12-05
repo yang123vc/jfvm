@@ -175,27 +175,77 @@ void java_java_io_RandomAccessFile_length(JVM *jvm, Slot *args) {
 
 //File
 
-void java_java_io_File_chdir(JVM *jvm, Slot *args) {
-  //TODO
+extern void java_java_io_File_getPath(JVM *jvm, Slot *args);
+
+static const char *File_getPath(JVM *jvm, Slot *args) {
+  java_java_io_File_getPath(jvm, args);
+  const char *str = jfvm_string_get_utf8(jvm, args[0].obj);
   jfvm_arc_release(jvm, &args[0]);
+  return str;
+}
+
+static void File_releasePath(JVM *jvm, const char *str) {
+  jfvm_string_release_utf8(jvm, str);
+}
+
+void java_java_io_File_getPathSeparator(JVM *jvm, Slot *args) {
+  args[0].i32 = ';';
+  args[0].type = 'C';
+}
+
+void java_java_io_File_getSeparator(JVM *jvm, Slot *args) {
+  args[0].i32 = '\\';
+  args[0].type = 'C';
+}
+
+void java_java_io_File_chdir(JVM *jvm, Slot *args) {
+  const char *str = File_getPath(jvm, args);
+  SetCurrentDirectory(str);
+  File_releasePath(jvm, str);
+  char cd[256];
+  GetCurrentDirectory(256, cd);
+  //TODO : System.setProperty("user.dir", cd);
 }
 
 void java_java_io_File_mkdir(JVM *jvm, Slot *args) {
-  //TODO
-  jfvm_arc_release(jvm, &args[0]);
-}
-
-void java_java_io_File_mkdirs(JVM *jvm, Slot *args) {
-  //TODO
-  jfvm_arc_release(jvm, &args[0]);
+  const char *str = File_getPath(jvm, args);
+  CreateDirectory(str, NULL);
+  File_releasePath(jvm, str);
 }
 
 void java_java_io_File_exists(JVM *jvm, Slot *args) {
-  //TODO
-  jfvm_arc_release(jvm, &args[0]);
+  const char *str = File_getPath(jvm, args);
+  HANDLE handle = CreateFile(str, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+  File_releasePath(jvm, str);
+  if (handle == INVALID_HANDLE_VALUE) {
+    args[0].i32 = 0;
+    args[0].i32 = 'Z';
+  } else {
+    CloseHandle(handle);
+    args[0].i32 = 1;
+    args[0].i32 = 'Z';
+  }
 }
 
 void java_java_io_File_lastModified(JVM *jvm, Slot *args) {
-  //TODO
-  jfvm_arc_release(jvm, &args[0]);
+  const char *str = File_getPath(jvm, args);
+  HANDLE handle = CreateFile(str, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+  File_releasePath(jvm, str);
+  if (handle == INVALID_HANDLE_VALUE) {
+    args[0].i64 = -1L;
+    args[0].type = 'J';
+    return;
+  }
+  union {
+    FILETIME win_epoch;  //100 nanoseconds from Jan 1, 1601
+    jlong i64;
+  } u;
+  GetFileTime(handle, NULL, NULL, &u.win_epoch);
+  CloseHandle(handle);
+  //convert epoch(Jan 1, 1601) to epoch(Jan 1, 1970)
+  jlong time = u.i64 / 10000L;  //convert 100nano to 1ms
+  time -= 11636784000000L;  //369 * 365 * 24 * 60 * 60 * 1000;  //minus 369 years
+  time -= 7948800000L;  //92 * 24 * 60 * 60 * 1000;  //minus 92 leap days
+  args[0].i64 = time;
+  args[0].type = 'J';
 }

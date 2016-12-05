@@ -166,17 +166,35 @@ void java_java_io_RandomAccessFile_length(JVM *jvm, Slot *args) {
 
 //File
 
+extern void java_java_io_File_getPath(JVM *jvm, Slot *args);
+
+static const char *File_getPath(JVM *jvm, Slot *args) {
+  java_java_io_File_getPath(jvm, args);
+  const char *str = jfvm_string_get_utf8(args[0].obj);
+  jfvm_arc_release(jvm, &args[0]);
+  return str;
+}
+
+static void File_releasePath(JVM *jvm, const char *str) {
+  jfvm_string_release_utf8(jvm, str);
+}
+
+void java_java_io_File_getPathSeparator(JVM *jvm, Slot *args) {
+  args[0].i32 = ':';
+  args[0].type = 'C';
+}
+
+void java_java_io_File_getSeparator(JVM *jvm, Slot *args) {
+  args[0].i32 = '/';
+  args[0].type = 'C';
+}
+
 void java_java_io_File_chdir(JVM *jvm, Slot *args) {
   //TODO
   jfvm_arc_release(jvm, &args[0]);
 }
 
 void java_java_io_File_mkdir(JVM *jvm, Slot *args) {
-  //TODO
-  jfvm_arc_release(jvm, &args[0]);
-}
-
-void java_java_io_File_mkdirs(JVM *jvm, Slot *args) {
   //TODO
   jfvm_arc_release(jvm, &args[0]);
 }

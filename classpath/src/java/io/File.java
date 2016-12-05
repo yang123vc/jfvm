@@ -8,20 +8,31 @@ package java.io;
 public class File {
   private String path;
 
-  public File(String path) {
-    this.path = path;
-  }
+  public static final char pathSeparatorChar;  // : or ;
+  public static final char separatorChar;  // / or \\
 
-  public char pathSeparatorChar;
-  public char separatorChar;
+  public static final String pathSeparator;
+  public static final String separator;
 
-  public String pathSeparator;
-  public String separator;
-
-//  private native void init();
+  private native static char getPathSeparator();
+  private native static char getSeparator();
 
   static {
-    //init();
+    char ch[] = new char[1];
+    pathSeparatorChar = getPathSeparator();
+    ch[0] = pathSeparatorChar;
+    pathSeparator = new String(ch);
+    separatorChar = getSeparator();
+    ch[0] = separatorChar;
+    separator = new String(ch);
+  }
+
+  public File(String path) {
+    this.path = path.replaceAll("\\\\", "/");
+  }
+
+  public File(File parent, String child) {
+    this.path = parent.path + "/" + path.replaceAll("\\\\", "/");
   }
 
   public String getPath() {
@@ -36,7 +47,20 @@ public class File {
 
   public native boolean chdir();  //Yes you can!
   public native boolean mkdir();
-  public native boolean mkdirs();
+  public boolean mkdirs() {
+    char ca[] = path.toCharArray();
+    int len = ca.length;
+    for(int i=0;i<len;i++) {
+      if (ca[i] == '/') {
+        File sub = new File(path.substring(0, i));
+        if (!sub.mkdir()) return false;
+      }
+    }
+    if (ca[len-1] != '/') {
+      if (!mkdir()) return false;
+    }
+    return true;
+  }
 
   public native boolean exists();
 
