@@ -369,7 +369,7 @@ Object* jfvm_anewarray(JVM *jvm, const char *cls, int cnt);
 /** Creates a new multi-dimensional array. */
 Object* jfvm_multianewarray(JVM *jvm, int numdims, const char *cls, Slot *dims);
 /** Creates a new string from C string */
-Object* jfvm_new_string(JVM *jvm, const char *cstr, int len);
+Object* jfvm_new_string_utf8(JVM *jvm, const char *cstr, int len);
 /** Creates a new string from UTF16 string (len = # chars) */
 Object* jfvm_new_string_utf16(JVM *jvm, const jchar *cstr, int len);
 /** Returns C string from a Java String (must call jfvm_string_release_utf8() to free) */
@@ -404,8 +404,12 @@ void jfvm_checkcast_interface(JVM *jvm, const char *cls, Slot *slot);
 void jfvm_checkcast_array(JVM *jvm, const char *cls, Slot *slot);
 
 //classpath
-/** Finds a class by name (ie: "java/lang/Object"). */
+/** Finds a class by name (ie: "java/lang/Object") (invokes static{} if needed). */
 Class *jfvm_find_class(JVM *jvm, const char *);
+/** Finds a class by name (ie: "java/lang/Object") without invoking static{}. */
+Class *jfvm_find_class_noinit(JVM *jvm, const char *);
+/** Invokes static{} if not already done. */
+void jfvm_class_init(JVM *jvm, Class *);
 /** Adds a library to the classpath. */
 void* jfvm_classpath_add(JVM *jvm, const char *fn);
 /** Removes a library from the classpath. */

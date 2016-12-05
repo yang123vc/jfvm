@@ -46,6 +46,7 @@ public class File {
   }
 
   public native boolean chdir();  //Yes you can!
+  public native static String getdir();
   public native boolean mkdir();
   public boolean mkdirs() {
     char ca[] = path.toCharArray();

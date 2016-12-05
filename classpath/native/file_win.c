@@ -249,3 +249,9 @@ void java_java_io_File_lastModified(JVM *jvm, Slot *args) {
   args[0].i64 = time;
   args[0].type = 'J';
 }
+
+void java_java_io_File_getdir(JVM *jvm, Slot *args) {
+  //TODO
+  args[0].obj = jfvm_new_string_utf8(jvm, "TODO", 4);
+  args[0].type = 'L';
+}

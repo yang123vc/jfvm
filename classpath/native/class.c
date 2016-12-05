@@ -29,14 +29,14 @@ void java_java_lang_Class_getFields(JVM *jvm, Slot *args) {
   cnt = 0;
   while (cls->fields[pos].name != NULL) {
     name = cls->fields[pos].name;
-    fields->array->objs[cnt] = jfvm_new_string(jvm, name, strlen(name));
+    fields->array->objs[cnt] = jfvm_new_string_utf8(jvm, name, strlen(name));
     pos++;
     cnt++;
   }
   pos = 0;
   while (cls->static_fields[pos].name != NULL) {
     name = cls->fields[pos].name;
-    fields->array->objs[cnt] = jfvm_new_string(jvm, name, strlen(name));
+    fields->array->objs[cnt] = jfvm_new_string_utf8(jvm, name, strlen(name));
     pos++;
     cnt++;
   }
@@ -64,14 +64,14 @@ void java_java_lang_Class_getMethods(JVM *jvm, Slot *args) {
   cnt = 0;
   while (cls->methods[pos].name != NULL) {
     name = cls->methods[pos].name;
-    methods->array->objs[cnt] = jfvm_new_string(jvm, name, strlen(name));
+    methods->array->objs[cnt] = jfvm_new_string_utf8(jvm, name, strlen(name));
     pos++;
     cnt++;
   }
   pos = 0;
   while (cls->static_methods[pos].name != NULL) {
     name = cls->methods[pos].name;
-    methods->array->objs[cnt] = jfvm_new_string(jvm, name, strlen(name));
+    methods->array->objs[cnt] = jfvm_new_string_utf8(jvm, name, strlen(name));
     pos++;
     cnt++;
   }

@@ -18,10 +18,12 @@ static jboolean init_pst = J_FALSE;  //do NOT call static {} functions until all
 
 void jfvm_init_class_pst(JVM *jvm) {
   init_pst = J_TRUE;
-  class_throwable = jfvm_find_class(jvm, "java/lang/Throwable");
-  class_string = jfvm_find_class(jvm, "java/lang/String");
+  class_throwable = jfvm_find_class_noinit(jvm, "java/lang/Throwable");
+  class_string = jfvm_find_class_noinit(jvm, "java/lang/String");
   method_string_init_byte_array_clsidx = jfvm_get_method_clsidx(jvm, class_string, "<init>([B)V");
   method_string_init_char_array_clsidx = jfvm_get_method_clsidx(jvm, class_string, "<init>([C)V");
+  jfvm_class_init(jvm, class_throwable);
+  jfvm_class_init(jvm, class_string);
 }
 
 /** Loads a DLL adds classes to classpath and returns DLL handle. */
@@ -81,9 +83,26 @@ int jfvm_patch_classes(JVM *jvm, Class **classes) {
   return cnt;
 }
 
-Class *jfvm_find_class(JVM *jvm, const char *name) {
+void jfvm_class_init(JVM *jvm, Class *cls) {
   Slot stack[1] = {{0,0}};
-  void (*clinit)(JVM *jvm, Slot *local);
+  void (*clinit)(JVM *jvm, Slot *args);
+  while (!__atomic_test_and_set(&cls->object_clinit_reflck, __ATOMIC_SEQ_CST)) {};
+  if (cls->object_clinit != NULL) {
+    clinit = cls->object_clinit;
+    cls->object_clinit = NULL;
+    //catch exceptions
+    UCatch *ucatch = jfvm_ucatch_alloc(jvm, class_throwable);
+    if (setjmp(ucatch->buf) == 0) {
+      (*clinit)(jvm, stack);  //class static { ... }
+    } else {
+      //TODO : log exception
+    }
+    jfvm_ucatch_unwind(jvm);
+  }
+  __atomic_clear(&cls->object_clinit_reflck, __ATOMIC_SEQ_CST);
+}
+
+static Class *_jfvm_find_class(JVM *jvm, const char *name, int init) {
   if (name == NULL) return NULL;
   for(int a=0;a<class_pool_size;a++) {
     Class **classes = class_pool[a];
@@ -91,20 +110,7 @@ Class *jfvm_find_class(JVM *jvm, const char *name) {
       Class* cls = *classes;
       if (strcmp(cls->name, name) == 0) {
         if (!init_pst) return cls;
-        while (!__atomic_test_and_set(&cls->object_clinit_reflck, __ATOMIC_SEQ_CST)) {};
-        if (cls->object_clinit != NULL) {
-          clinit = cls->object_clinit;
-          cls->object_clinit = NULL;
-          //catch exceptions
-          UCatch *ucatch = jfvm_ucatch_alloc(jvm, class_throwable);
-          if (setjmp(ucatch->buf) == 0) {
-            (*clinit)(jvm, stack);  //class static { ... }
-          } else {
-            //TODO : log exception
-          }
-          jfvm_ucatch_unwind(jvm);
-        }
-        __atomic_clear(&cls->object_clinit_reflck, __ATOMIC_SEQ_CST);
+        if (init) jfvm_class_init(jvm, cls);
         return cls;
       }
       classes++;
@@ -112,6 +118,14 @@ Class *jfvm_find_class(JVM *jvm, const char *name) {
   }
   printf("Warning:jfvm_find_class():can not find:%s\n", name);
   return NULL;
+}
+
+Class *jfvm_find_class(JVM *jvm, const char *name) {
+  return _jfvm_find_class(jvm, name, 1);
+}
+
+Class *jfvm_find_class_noinit(JVM *jvm, const char *name) {
+  return _jfvm_find_class(jvm, name, 0);
 }
 
 //class
@@ -322,7 +336,7 @@ Object* jfvm_create_lambda(JVM *jvm, Class *cls, int objidx, void *method) {
   return obj;
 }
 
-Object* jfvm_new_string(JVM *jvm, const char *str, int len) {
+Object* jfvm_new_string_utf8(JVM *jvm, const char *str, int len) {
   int stackpos = -1;
   Object *strobj;
   Slot *stack = jfvm_stack_alloc(jvm, 3);

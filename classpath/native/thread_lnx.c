@@ -21,29 +21,29 @@ static void start_thread(Object *arg) {
   jfvm_thread_remove(jvm, arg);
 }
 
-void java_java_lang_Thread_start(JVM *jvm, Slot *local) {
-  //local[0].obj = this
+void java_java_lang_Thread_start(JVM *jvm, Slot *args) {
+  //args[0].obj = this
   union {
     pthread_t handle;
     void* ptr;
   } p;
-  pthread_create(&p.handle, NULL, &start_thread, local[0].obj);
-  jfvm_write_handle_ptr(jvm, local[0].obj, p.ptr);
-  jfvm_thread_add(jvm, local[0].obj);
-//  jfvm_arc_release(jvm, &local[0]); //do not release it - new thread will own it
-  local[0].type = 0;
+  pthread_create(&p.handle, NULL, &start_thread, args[0].obj);
+  jfvm_write_handle_ptr(jvm, args[0].obj, p.ptr);
+  jfvm_thread_add(jvm, args[0].obj);
+//  jfvm_arc_release(jvm, &args[0]); //do not release it - new thread will own it
+  args[0].type = 0;
 }
 
-void java_java_lang_Thread_join(JVM *jvm, Slot *local) {
+void java_java_lang_Thread_join(JVM *jvm, Slot *args) {
   union {
     pthread_t handle;
     void* ptr;
   } p;
-  p.ptr = jfvm_read_handle_ptr(jvm, local[0].obj);
+  p.ptr = jfvm_read_handle_ptr(jvm, args[0].obj);
   pthread_join(p.handle, NULL);
 }
 
-void java_java_lang_Thread_sleep(JVM *jvm, Slot *local) {
-  usleep(local[0].i32 * 1000);
+void java_java_lang_Thread_sleep(JVM *jvm, Slot *args) {
+  usleep(args[0].i32 * 1000);
 }
 

@@ -107,6 +107,14 @@
     <zip bits="64" name="lnx" ext=".so" a=""/>
   </target>
 
+  <target name="clean" description="deletes compiled files">
+    <delete>
+      <fileset dir="classes" includes="**/*.class"/>
+      <fileset dir="oes" includes="**/*.o"/>
+      <fileset dir="ces" includes="**/*.c"/>
+    </delete>
+  </target>
+
   <target name="help">
     <echo>ant win32  // build Windows 32 library</echo>
     <echo>ant win64  // build Windows 64 library</echo>

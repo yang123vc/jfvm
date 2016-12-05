@@ -52,7 +52,7 @@ static Object* getClass(JVM *jvm, Object *obj) {
   Class *cls = obj->cls;
   Object *clsobj = jfvm_new(jvm, jfvm_find_class(jvm, "java/lang/Class"));
   clsobj->defcls = cls;
-  jfvm_set_object(jvm, clsobj, "name", jfvm_new_string(jvm, cls->name, strlen(cls->name)));
+  jfvm_set_object(jvm, clsobj, "name", jfvm_new_string_utf8(jvm, cls->name, strlen(cls->name)));
   return clsobj;
 }
 

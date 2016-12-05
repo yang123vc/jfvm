@@ -208,3 +208,9 @@ void java_java_io_File_lastModified(JVM *jvm, Slot *args) {
   //TODO
   jfvm_arc_release(jvm, &args[0]);
 }
+
+void java_java_io_File_getdir(JVM *jvm, Slot *args) {
+  //TODO
+  args[0].obj = jfvm_new_string_utf8(jvm, "TODO", 4);
+  args[0].type = 'L';
+}

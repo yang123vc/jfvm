@@ -283,7 +283,7 @@ public class Compiler {
         mth.append("  umethod->line=" + opc + ";\n");  //TODO : this is pc, should be line #
         if (bytecode == 0xc4) {
           wide = true;
-          bytecode = readByte();
+          bytecode = readByte() & 0xff;
         } else {
           wide = false;
         }
@@ -1594,7 +1594,7 @@ public class Compiler {
                 ConstUTF8 cu = (ConstUTF8)cls.ConstList[cs.idx];
                 len = cu.str.length();
                 mth.append("  stackpos++;\n");
-                mth.append("  stack[stackpos].obj = jfvm_new_string(jvm," + quoteString(cu.str) + "," + len + ");\n");
+                mth.append("  stack[stackpos].obj = jfvm_new_string_utf8(jvm," + quoteString(cu.str) + "," + len + ");\n");
                 mth.append("  stack[stackpos].type = 'L';\n");
                 break;
             }
@@ -2334,7 +2334,10 @@ public class Compiler {
     cls_pre.append("  classref_0 = &" + cls.cname + ";\n");
     for(int a=1;a<ccnt;a++) {
       String scls = classes.get(a);
-      cls_pre.append("  classref_" + a + " = jfvm_find_class(jvm, " + quoteString(scls) + ");\n");
+      cls_pre.append("  classref_" + a + " = jfvm_find_class_noinit(jvm, " + quoteString(scls) + ");\n");
+    }
+    for(int a=1;a<ccnt;a++) {
+      cls_pre.append("  jfvm_class_init(jvm, classref_" + a + ");\n");
     }
     for(int a=0;a<syncidx;a++) {
       cls_pre.append("  method_mutex_" + a + " = jfvm_mutex_alloc();\n");

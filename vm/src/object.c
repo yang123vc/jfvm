@@ -78,8 +78,11 @@ void jfvm_putstatic(JVM *jvm, Class *cls, char type, int clsidx, Slot *src) {
 }
 
 void jfvm_invokevirtual(JVM *jvm, Class *cls, int objidx, Slot *args) {
-  void (*method)(JVM *jvm, Slot *local);
+  void (*method)(JVM *jvm, Slot *args);
   Object *obj = args[0].obj;
+  if (obj == NULL) {
+    jfvm_throw_npe(jvm);
+  }
   method = (void (*)(JVM *, Slot *)) obj->methods[objidx];
 #ifdef JFVM_DEBUG_INVOKE
   printf("ivirtual:%p:%s.<virtual> @ %d:%p:%p\n", jvm->thread, cls->name, objidx, method, jvm->ustack);
@@ -91,7 +94,10 @@ void jfvm_invokevirtual(JVM *jvm, Class *cls, int objidx, Slot *args) {
 }
 
 void jfvm_invokestatic(JVM *jvm, Class *cls, int clsidx, Slot *args) {
-  void (*method)(JVM *jvm, Slot *local);
+  void (*method)(JVM *jvm, Slot *args);
+  if (cls == NULL) {
+    jfvm_throw_npe(jvm);
+  }
   method = cls->static_methods[clsidx].method;
 #ifdef JFVM_DEBUG_INVOKE
   printf("i static:%p:%s.%s @ %d:%p\n", jvm->thread, cls->name, cls->static_methods[clsidx].name_desc, clsidx, method);
@@ -103,7 +109,10 @@ void jfvm_invokestatic(JVM *jvm, Class *cls, int clsidx, Slot *args) {
 }
 
 void jfvm_invokespecial(JVM *jvm, Class *cls, int clsidx, Slot *args) {
-  void (*method)(JVM *jvm, Slot *local);
+  void (*method)(JVM *jvm, Slot *args);
+  if (cls == NULL) {
+    jfvm_throw_npe(jvm);
+  }
   method = cls->methods[clsidx].method;
 #ifdef JFVM_DEBUG_INVOKE
   printf("ispecial:%p:%s.%s @ %d:%p\n", jvm->thread, cls->name, cls->methods[clsidx].name_desc, clsidx, method);

@@ -38,7 +38,7 @@ static Class* main_class;
 static int main_clsidx;
 static int main_return;
 
-static void jfvm_main_thread(JVM *jvm, Slot *local) {
+static void jfvm_main_thread(JVM *jvm, Slot *args) {
   main_thread_started = J_TRUE;
   jfvm_invokestatic(jvm, main_class, main_clsidx, main_stack);
   main_return = main_stack[0].i32;
@@ -72,7 +72,7 @@ void jfvm_main(const char *lib_name[], void *lib_handle[], int lib_count, int ar
   main_stack[0].type = 'L';
 
   for(int a=1;a<argc;a++) {
-    main_args->array->objs[a-1] = jfvm_new_string(jvm, argv[a], strlen(argv[a]));
+    main_args->array->objs[a-1] = jfvm_new_string_utf8(jvm, argv[a], strlen(argv[a]));
   }
 
   //create thread and call jfvm_main_thread(String cls)
@@ -124,7 +124,7 @@ void jfvm_init_destroyer_pst(JVM *jvm) {
   jfvm_invokevirtual(jvm, destroyer_thread->cls, startobjidx, stack);
 }
 
-void jfvm_destroy_run(JVM *jvm, Slot *local) {
+void jfvm_destroy_run(JVM *jvm, Slot *args) {
   Slot stack[1] = {{0,0}};
   Object *stop;
   Object *next;
