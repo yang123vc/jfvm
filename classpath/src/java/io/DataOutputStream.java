@@ -26,6 +26,10 @@ public class DataOutputStream extends OutputStream {
     return order;
   }
 
+  public void close() throws IOException {
+    os.close();
+  }
+
   public void write(byte val) throws IOException {
     os.write(val);
   }

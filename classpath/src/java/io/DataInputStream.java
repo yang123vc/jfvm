@@ -26,6 +26,10 @@ public class DataInputStream extends InputStream {
     return order;
   }
 
+  public void close() throws IOException {
+    is.close();
+  }
+
   public int read() throws IOException {
     return is.read();
   }
