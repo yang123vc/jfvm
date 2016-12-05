@@ -12,6 +12,10 @@ public class FileOutputStream extends OutputStream {
     open(fn);
   }
 
+  public FileOutputStream(File file) throws IOException {
+    open(file.getPath());
+  }
+
   public native void open(String fn) throws IOException;
   public native void close() throws IOException;
 

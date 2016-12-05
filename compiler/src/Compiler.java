@@ -1911,6 +1911,7 @@ public class Compiler {
       mths.append(mth.toString());
     } catch (Exception e) {
       e.printStackTrace(System.out);
+      System.out.println("Exception while compiling:" + method.name_desc);
     }
   }
 

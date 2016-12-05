@@ -5,6 +5,8 @@ package java.lang;
  * @author pquiring
  */
 
+import java.io.PrintStream;
+
 public class Throwable {
   private String message;
   public Throwable() {}
@@ -21,5 +23,9 @@ public class Throwable {
   public void printStackTrace() {
     //TODO
     System.out.println(toString());
+  }
+  public void printStackTrace(PrintStream out) {
+    //TODO
+    out.println(toString());
   }
 }

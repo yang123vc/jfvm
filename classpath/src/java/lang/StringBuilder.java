@@ -33,7 +33,19 @@ public class StringBuilder {
     return this;
   }
 
-  public StringBuilder append(int ival) {
-    return append(Integer.toString(ival, 10));
+  public StringBuilder append(int val) {
+    return append(Integer.toString(val));
+  }
+
+  public StringBuilder append(long val) {
+    return append(Long.toString(val));
+  }
+
+  public StringBuilder append(float ival) {
+    return append(Float.toString(ival));
+  }
+
+  public StringBuilder append(double ival) {
+    return append(Double.toString(ival));
   }
 }

@@ -8,6 +8,10 @@
   #include "system_lnx.c"
 #endif
 
+void java_java_lang_System_getenv(JVM *jvm, Slot *args) {
+  jfvm_arc_release(jvm, &args[0]);
+}
+
 void java_java_lang_System_debug(JVM *jvm, Slot *args) {
   __asm("int $3");
 }
@@ -98,16 +102,16 @@ static void copy_objs(JVM *jvm, Object *src, int srcPos, Object *dest, int destP
   }
 }
 
-void java_java_lang_System_arraycopy(JVM *jvm, Slot *local) {
+void java_java_lang_System_arraycopy(JVM *jvm, Slot *args) {
   //Object src, int srcPos, Object destPos, int destPos, int length
-  if (local[0].obj == NULL) {
+  if (args[0].obj == NULL) {
     jfvm_throw_npe(jvm);
   }
-  if (local[2].obj == NULL) {
+  if (args[2].obj == NULL) {
     jfvm_throw_npe(jvm);
   }
-  Object *src = local[0].obj;
-  Object *dest = local[2].obj;
+  Object *src = args[0].obj;
+  Object *dest = args[2].obj;
   char srcType = src->type;
   char destType = dest->type;
   if (srcType == 'L' || destType == 'L') {
@@ -118,9 +122,9 @@ void java_java_lang_System_arraycopy(JVM *jvm, Slot *local) {
     //must be same types
     jfvm_throw_npe(jvm);
   }
-  int srcPos = local[1].i32;
-  int destPos = local[3].i32;
-  int length = local[4].i32;
+  int srcPos = args[1].i32;
+  int destPos = args[3].i32;
+  int length = args[4].i32;
   switch (srcType) {
     case 'Z':
     case 'B':
@@ -142,8 +146,8 @@ void java_java_lang_System_arraycopy(JVM *jvm, Slot *local) {
       copy_objs(jvm, src, srcPos, dest, destPos, length);
       break;
   }
-  jfvm_arc_release(jvm, &local[0]);
-  jfvm_arc_release(jvm, &local[2]);
+  jfvm_arc_release(jvm, &args[0]);
+  jfvm_arc_release(jvm, &args[2]);
 }
 
 static void rcopy_bytes(JVM *jvm, Object *src, int srcPos, Object *dest, int destPos, int length) {
@@ -242,16 +246,16 @@ static void rcopy_objs(JVM *jvm, Object *src, int srcPos, Object *dest, int dest
   }
 }
 
-void java_java_lang_System_rarraycopy(JVM *jvm, Slot *local) {
+void java_java_lang_System_rarraycopy(JVM *jvm, Slot *args) {
   //Object src, int srcPos, Object destPos, int destPos, int length
-  if (local[0].obj == NULL) {
+  if (args[0].obj == NULL) {
     jfvm_throw_npe(jvm);
   }
-  if (local[2].obj == NULL) {
+  if (args[2].obj == NULL) {
     jfvm_throw_npe(jvm);
   }
-  Object *src = local[0].obj;
-  Object *dest = local[2].obj;
+  Object *src = args[0].obj;
+  Object *dest = args[2].obj;
   char srcType = src->type;
   char destType = dest->type;
   if (srcType == 'L' || destType == 'L') {
@@ -262,9 +266,9 @@ void java_java_lang_System_rarraycopy(JVM *jvm, Slot *local) {
     //must be same types
     jfvm_throw_npe(jvm);
   }
-  int srcPos = local[1].i32;
-  int destPos = local[3].i32;
-  int length = local[4].i32;
+  int srcPos = args[1].i32;
+  int destPos = args[3].i32;
+  int length = args[4].i32;
   switch (srcType) {
     case 'Z':
     case 'B':
@@ -286,6 +290,6 @@ void java_java_lang_System_rarraycopy(JVM *jvm, Slot *local) {
       rcopy_objs(jvm, src, srcPos, dest, destPos, length);
       break;
   }
-  jfvm_arc_release(jvm, &local[0]);
-  jfvm_arc_release(jvm, &local[2]);
+  jfvm_arc_release(jvm, &args[0]);
+  jfvm_arc_release(jvm, &args[2]);
 }

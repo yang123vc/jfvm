@@ -33,7 +33,19 @@ public class StringBuffer {
     return this;
   }
 
-  public StringBuffer append(int ival) {
-    return append(Integer.toString(ival, 10));
+  public StringBuffer append(int val) {
+    return append(Integer.toString(val));
+  }
+
+  public StringBuffer append(long val) {
+    return append(Long.toString(val));
+  }
+
+  public StringBuffer append(float ival) {
+    return append(Float.toString(ival));
+  }
+
+  public StringBuffer append(double ival) {
+    return append(Double.toString(ival));
   }
 }

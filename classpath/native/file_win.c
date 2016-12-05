@@ -172,3 +172,25 @@ void java_java_io_RandomAccessFile_length(JVM *jvm, Slot *args) {
   args[0].i64 = length;
   args[0].type = 'I';
 }
+
+//File
+
+void java_java_io_File_chdir(JVM *jvm, Slot *args) {
+  //TODO
+  jfvm_arc_release(jvm, &args[0]);
+}
+
+void java_java_io_File_mkdir(JVM *jvm, Slot *args) {
+  //TODO
+  jfvm_arc_release(jvm, &args[0]);
+}
+
+void java_java_io_File_mkdirs(JVM *jvm, Slot *args) {
+  //TODO
+  jfvm_arc_release(jvm, &args[0]);
+}
+
+void java_java_io_File_exists(JVM *jvm, Slot *args) {
+  //TODO
+  jfvm_arc_release(jvm, &args[0]);
+}

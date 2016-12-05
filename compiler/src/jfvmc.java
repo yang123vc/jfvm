@@ -35,19 +35,6 @@ public class jfvmc implements ClassPool {
     }
     zf.close();
   }
-  private void addJar2(InputStream is) throws Exception {
-    ZipInputStream zis = new ZipInputStream(is);
-    while (true) {
-      ZipEntry ze = zis.getNextEntry();
-      if (ze == null) break;
-      String name = ze.getName();
-      if (!name.endsWith(".class")) continue;
-      VMClass cls = loader.load(zis, name);
-      cls.cp = cp;
-      clspool.add(cls);
-    }
-    zis.close();
-  }
   private void addMod(String file) throws Exception {
     ZipFile zf = new ZipFile(file);
     Enumeration zfs = zf.entries();

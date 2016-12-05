@@ -44,4 +44,7 @@ public class Long {
     }
     return new String(ch, 0, chs);
   }
+  public static String toString(long value) {
+    return toString(value, 10);
+  }
 }

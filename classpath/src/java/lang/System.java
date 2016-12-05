@@ -32,6 +32,8 @@ public class System {
   /** Copies an array in reverse order. */
   public static native void rarraycopy(Object src, int srcPos, Object dest, int destPos, int length);
 
+  public static native String getenv(String name);
+
   /** Triggers debug breakpoint. */
   public static native void debug();
 }
