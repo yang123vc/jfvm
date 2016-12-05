@@ -39,4 +39,6 @@ public class File {
   public native boolean mkdirs();
 
   public native boolean exists();
+
+  public native long lastModified();
 }

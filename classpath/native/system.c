@@ -9,7 +9,12 @@
 #endif
 
 void java_java_lang_System_getenv(JVM *jvm, Slot *args) {
+  //TODO
   jfvm_arc_release(jvm, &args[0]);
+}
+
+void java_java_lang_System_exit(JVM *jvm, Slot *args) {
+  jfvm_exit(args[0].i32);
 }
 
 void java_java_lang_System_debug(JVM *jvm, Slot *args) {

@@ -34,6 +34,8 @@ public class System {
 
   public static native String getenv(String name);
 
+  public static native void exit(int rv);
+
   /** Triggers debug breakpoint. */
   public static native void debug();
 }

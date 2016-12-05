@@ -52,10 +52,10 @@ public class jfvmc implements ClassPool {
     }
     zf.close();
   }
-  private boolean upToDate(long srcTimeStamp, String destFile) {
-    File file = new File(destFile);
-    if (!file.exists()) return false;
-    return (file.lastModified() >= srcTimeStamp);
+  private boolean upToDate(long srcTimeStamp, String destFilename) {
+    File destfile = new File(destFilename);
+    if (!destfile.exists()) return false;
+    return (destfile.lastModified() >= srcTimeStamp);
   }
   public void run(String args[]) {
     Compiler compiler = new Compiler();

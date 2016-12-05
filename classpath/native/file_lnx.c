@@ -180,3 +180,13 @@ void java_java_io_File_mkdirs(JVM *jvm, Slot *args) {
   //TODO
   jfvm_arc_release(jvm, &args[0]);
 }
+
+void java_java_io_File_exists(JVM *jvm, Slot *args) {
+  //TODO
+  jfvm_arc_release(jvm, &args[0]);
+}
+
+void java_java_io_File_lastModified(JVM *jvm, Slot *args) {
+  //TODO
+  jfvm_arc_release(jvm, &args[0]);
+}

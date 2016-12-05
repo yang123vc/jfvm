@@ -28,4 +28,8 @@ public class ZipEntry {
   public Date getDate() {
     return date;
   }
+  public long getTime() {
+    //TODO
+    return 0;
+  }
 }

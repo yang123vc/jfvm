@@ -1335,7 +1335,7 @@ public class Compiler {
             //objectref -> boolean
             idx = readShort() & 0xffff;
             popObject(0);
-            mth.append("  jfvm_instanceof(jvm," + quoteString(cls.getConstString(idx)) + ",temp[0])\n");  //will release objectref
+            mth.append("  jfvm_instanceof(jvm," + quoteString(cls.getConstString(idx)) + ",&temp[0]);\n");  //will release objectref
             pushBoolean(0);
             break;
           case 0xba:  //invokedynamic
@@ -2290,7 +2290,22 @@ public class Compiler {
   }
 
   private String quoteString(String in) {
-    return "\"" + in.replaceAll("\n", "\\\\n").replaceAll("\r", "\\\\r") + "\"";
+    StringBuffer sb = new StringBuffer();
+    char inca[] = in.toCharArray();
+    int len = inca.length;
+    sb.append("\"");
+    for(int i=0;i<len;i++) {
+      char ch = inca[i];
+      switch (ch) {
+        case '\"': sb.append("\\\""); break;
+        case '\r': sb.append("\\r"); break;
+        case '\n': sb.append("\\n"); break;
+        case '\\': sb.append("\\\\"); break;
+        default: sb.append(ch);
+      }
+    }
+    sb.append("\"");
+    return sb.toString();
   }
 
   /* class references are resolved in <clsinit>() which is called from <clinit>() */
