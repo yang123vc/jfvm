@@ -25,11 +25,11 @@ Install:
 
 Compiling:
   - cd compiler
-  - ant
+  - ant jar
   - cd vm
-  - ant
+  - ant win32|win64|lnx32|lnx64
   - cd classpath
-  - ant
+  - ant win32|win64|lnx32|lnx64
 
 Notes:
  - currently the classpath supports Threads, Strings and System.out.println()
@@ -38,7 +38,8 @@ Notes:
    - invokedynamic (for lambda expressions) are a little hack-ish since I don't quite understand them (they do work)
      but anything else that may use invokedynamic will not work
  - exception handling is working
- - thread sync is done
+ - thread sync is working
+ - compiling the compiler itself to native code is not working yet (soon)
 
 Future:
  - I only plan to support basic file I/O and Sockets.  No plans to implement nio, AWT/Swing, etc.

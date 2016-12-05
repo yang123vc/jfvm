@@ -32,25 +32,25 @@
     <attribute name="libext"/>
     <attribute name="exeext"/>
     <sequential>
-      <exec command="java -jar ../bin/jfvmc.jar --@{bits} -g ../bin/jfvmc.jar --cp ../lib/jfvm.jar --out jfvmc@{libext}"/>
-      <copy file="../lib/classpath-@{name}@{bits}@{libext}" todir="."/>
-      <copy file="../lib/jfvm-@{name}@{bits}@{libext}" todir="."/>
-      <exec command="java -jar ../bin/jfvml.jar --@{bits} -g classpath-@{name}@{bits} jfvmc --main jfvmc --out jfvmc@{exeext}"/>
+      <copy file="../lib@{bits}/base@{libext}" todir="."/>
+      <copy file="../lib@{bits}/zip@{libext}" todir="."/>
+      <copy file="../lib@{bits}/jfvm@{libext}" todir="."/>
 
-      <exec command="java -jar ../bin/jfvmc.jar --@{bits} -g ../bin/jfvml.jar --cp ../lib/jfvm.jar --out jfvml@{libext}"/>
-      <copy file="../lib/classpath-@{name}@{bits}@{libext}" todir="."/>
-      <copy file="../lib/jfvm-@{name}@{bits}@{libext}" todir="."/>
-      <exec command="java -jar ../bin/jfvml.jar --@{bits} -g classpath-@{name}@{bits} jfvml --main jfvml --out jfvml@{exeext}"/>
+      <exec command="java -jar ../bin/jfvmc.jar --@{bits} -g ../bin/jfvmc.jar --cp ../lib/base.jar ../lib/zip.jar --out jfvmc@{libext}"/>
+      <exec command="java -jar ../bin/jfvml.jar --@{bits} -g base zip jfvmc --main jfvmc --out jfvmc@{exeext}"/>
+
+      <exec command="java -jar ../bin/jfvmc.jar --@{bits} -g ../bin/jfvml.jar --cp ../lib/base.jar ../lib/zip.jar --out jfvml@{libext}"/>
+      <exec command="java -jar ../bin/jfvml.jar --@{bits} -g base zip jfvml --main jfvml --out jfvml@{exeext}"/>
     </sequential>
   </macrodef>
 
   <target name="win32" depends="jar">
-    <copy file="../lib/jfvm-win32.dll.a" todir="."/>
+    <copy file="../lib32/jfvm.dll.a" todir="."/>
     <build bits="32" name="win" libext=".dll" exeext=".exe"/>
   </target>
 
   <target name="win64" depends="jar">
-    <copy file="../lib/jfvm-win64.dll.a" todir="."/>
+    <copy file="../lib64/jfvm.dll.a" todir="."/>
     <build bits="64" name="win" libext=".dll" exeext=".exe"/>
   </target>
 
