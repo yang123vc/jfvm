@@ -8,6 +8,7 @@ public class VMClass {
   public short access_flags;
   public short this_class; String name; String cname;
   public short super_class; String super_name;
+  public long lastModified;
 
   public boolean cp;  //classpath (do not compile)
   public int size;  //# of methods & fields (non-static)

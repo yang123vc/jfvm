@@ -30,6 +30,7 @@ public class jfvmc implements ClassPool {
       String name = ze.getName();
       if (!name.endsWith(".class")) continue;
       VMClass cls = loader.load(zf.getInputStream(ze), name);
+      cls.lastModified = ze.getTime();
       cls.cp = cp;
       clspool.add(cls);
     }
@@ -45,10 +46,16 @@ public class jfvmc implements ClassPool {
       if (!name.endsWith(".class")) continue;
       name = name.substring(8);  //remove classes/
       VMClass cls = loader.load(zf.getInputStream(ze), name);
+      cls.lastModified = ze.getTime();
       cls.cp = cp;
       clspool.add(cls);
     }
     zf.close();
+  }
+  private boolean upToDate(long srcTimeStamp, String destFile) {
+    File file = new File(destFile);
+    if (!file.exists()) return false;
+    return (file.lastModified() >= srcTimeStamp);
   }
   public void run(String args[]) {
     Compiler compiler = new Compiler();
@@ -91,8 +98,10 @@ public class jfvmc implements ClassPool {
           } else {
             if (arg.endsWith(".class")) {
               //load class file
-              VMClass cls = loader.load(new FileInputStream(new File(arg)), arg);
+              File file = new File(arg);
+              VMClass cls = loader.load(new FileInputStream(file), arg);
               cls.cp = cp;
+              cls.lastModified = file.lastModified();
               clspool.add(cls);
             } else if (arg.endsWith(".jar")) {
               System.out.println("Loading:" + arg);
@@ -138,8 +147,10 @@ public class jfvmc implements ClassPool {
       for(int a=0;a<cnt;a++) {
         VMClass cls = clspool.get(a);
         if (cls.cp) continue;
+        String outfile = ces + "/" + cls.cname + ".c";
+        if (upToDate(cls.lastModified, outfile)) continue;
         System.out.println("Generating:" + cls.name + ".c");
-        FileOutputStream fos = new FileOutputStream(ces + "/" + cls.cname + ".c");
+        FileOutputStream fos = new FileOutputStream(outfile);
         StringBuffer fields = new StringBuffer();
         compiler.startClass(this);
         fos.write(fields.toString().getBytes());
@@ -191,7 +202,9 @@ public class jfvmc implements ClassPool {
         VMClass cls = clspool.get(a);
         if (cls.cp) continue;
 //        if (cls.isInterface) continue;
-        exec(new String[] {gcc, x64 ? "-m64" : "-m32", debug ? "-g" : "", "-DX" + bits, platform , isWindows ? "" : "-fPIC", "-Wno-incompatible-pointer-types", "-I", System.getenv("jfvm") + "/include", "-c", ces + "/" + cls.cname + ".c", "-o", oes + "/" + cls.cname + ".o"});
+        String o = oes + "/" + cls.cname + ".o";
+        if (upToDate(cls.lastModified, o)) continue;
+        exec(new String[] {gcc, x64 ? "-m64" : "-m32", debug ? "-g" : "", "-DX" + bits, platform , isWindows ? "" : "-fPIC", "-Wno-incompatible-pointer-types", "-I", System.getenv("jfvm") + "/include", "-c", ces + "/" + cls.cname + ".c", "-o", o});
         if (!new File(oes + "/" + cls.cname + ".o").exists()) {
           throw new Exception("Failed to compile:" + cls.cname + ".c");
         }
@@ -207,6 +220,7 @@ public class jfvmc implements ClassPool {
         if (ipath == -1) ipath = 0; else ipath++;
         String o = "oes/" + n.substring(ipath, idot) + ".o";
         nativeFiles.set(a, o);
+        if (upToDate(new File(n).lastModified(), o)) continue;
         exec(new String[] {gcc, x64 ? "-m64" : "-m32", debug ? "-g" : "", "-DX" + bits, platform , isWindows ? "" : "-fPIC", "-Wno-incompatible-pointer-types", "-I", System.getenv("jfvm") + "/include", "-c", n, "-o", o});
         if (!new File(o).exists()) {
           throw new Exception("Failed to compile:" + n);
