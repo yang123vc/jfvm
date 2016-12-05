@@ -298,9 +298,9 @@ void jfvm_init_class_pst(JVM *jvm);
 void jfvm_init_destroyer_pst(JVM *jvm);
 
 //arc
-/** Gets src into dest in a way that is ARC safe. (locking on src) (dest is clobbered) */
+/** Gets src into dest in a way that is ARC safe. (locking on src) (dest must be local) */
 void jfvm_arc_get(JVM *jvm, Object **dest, Object **src);
-/** Puts src into dest in a way that is ARC safe. (locking on dest) (src is not locked) */
+/** Puts src into dest in a way that is ARC safe. (locking on dest) (src must be local) */
 void jfvm_arc_put(JVM *jvm, Object **dest, Object **src);
 /** Copies src to dest (locking on src and dest) */
 void jfvm_arc_copy(JVM *jvm, Object **dest, Object **src);
