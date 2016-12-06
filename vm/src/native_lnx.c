@@ -30,6 +30,7 @@ void jfvm_mutex_unlock(void *mutex) {
 
 void jfvm_mutex_free(void *mutex) {
   pthread_mutex_destroy(mutex);
+	jfvm_free(NULL, mutex);
 }
 
 void* jfvm_cond_alloc() {
