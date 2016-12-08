@@ -30,9 +30,9 @@ public class Date {
     long epoch = (year - 1970) * msecPerYear;
     if (month > 1) epoch += daysInYear[month-2] * msecPerDay;
     epoch += msecPerDay * (day-1);
-    epoch += msecPerHour * (hour-1);
-    epoch += msecPerMinute * (minute-1);
-    epoch += msecPerSecond * (second-1);
+    epoch += msecPerHour * (hour);
+    epoch += msecPerMinute * (minute);
+    epoch += msecPerSecond * (second);
     epoch += ms;
     //add leap days
     int leapDays = (year-1) / 4;
@@ -63,9 +63,11 @@ public class Date {
       epoch -= days;
       year++;
     }
+    boolean leap = (year % 4 == 0) && (year % 400 != 0);
     month = 1;
     for(;;) {
       int days = daysPerMonth[month];
+      if (month == 2 && leap) days++;
       if (epoch < days) break;
       epoch -= days;
       month++;
